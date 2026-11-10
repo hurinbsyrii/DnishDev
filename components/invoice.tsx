@@ -2,22 +2,30 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
-import { addDays, balance, formatDate, money, type Project } from "@/lib/projects";
-import { downloadInvoice, invoiceTotal, type InvoiceDraft, type LineItem } from "@/lib/invoice";
+import { addDays, balance, money, type Project } from "@/lib/projects";
+import { downloadInvoice, formatInvoiceDate, invoiceLineTotal, invoiceNumber, invoiceTotal, type InvoiceDraft, type LineItem } from "@/lib/invoice";
+import { Modal } from "./ui";
 
 const lineItem = (description = "", rate = ""): LineItem => ({ id: crypto.randomUUID(), description, quantity: "1", rate });
+
+function newDraft(today: string, sender = "DnishDev", senderDetails = ""): InvoiceDraft {
+  return {
+    number: invoiceNumber(today), issued: today, due: addDays(today, 14), sender, senderDetails,
+    recipient: "", recipientDetails: "", paid: "0", notes: "", lines: [lineItem()],
+  };
+}
 
 function loadDraft(storageKey: string, today: string): InvoiceDraft {
   try {
     const raw = localStorage.getItem(storageKey);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const saved = JSON.parse(raw) as InvoiceDraft;
+      return { ...saved, number: saved.number?.trim() || invoiceNumber(today) };
+    }
   } catch {
     // The invoice editor still works if browser storage is unavailable.
   }
-  return {
-    number: `INV-${today.replaceAll("-", "")}-01`, issued: today, due: addDays(today, 14), sender: "DnishDev",
-    senderDetails: "", recipient: "", recipientDetails: "", paid: "0", notes: "", lines: [lineItem()],
-  };
+  return newDraft(today);
 }
 
 export function Invoice({ projects, today, owner }: { projects: Project[]; today: string; owner: string }) {
@@ -26,6 +34,7 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
   const [projectId, setProjectId] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmNew, setConfirmNew] = useState(false);
   const total = invoiceTotal(draft.lines);
   const paid = Math.round(Number(draft.paid) * 100);
   const selectedProject = projects.find((project) => project.id === projectId);
@@ -34,7 +43,7 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
     try { localStorage.setItem(storageKey, JSON.stringify(draft)); } catch { /* Draft can still be downloaded. */ }
   }, [draft, storageKey]);
 
-  function field(name: Exclude<keyof InvoiceDraft, "lines">, value: string) {
+  function field(name: Exclude<keyof InvoiceDraft, "lines" | "number">, value: string) {
     setDraft((current) => ({ ...current, [name]: value }));
   }
 
@@ -50,11 +59,18 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
     }));
   }
 
+  function startNewInvoice() {
+    setDraft(newDraft(today, draft.sender, draft.senderDetails));
+    setProjectId("");
+    setError("");
+    setConfirmNew(false);
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const trimmed = { ...draft, number: draft.number.trim(), sender: draft.sender.trim(), recipient: draft.recipient.trim() };
-    if (!trimmed.sender || !trimmed.recipient || !trimmed.number || draft.lines.some((item) => !item.description.trim())) {
-      return setError("Enter an invoice number, both company names and a description for each item.");
+    const trimmed = { ...draft, sender: draft.sender.trim(), recipient: draft.recipient.trim() };
+    if (!trimmed.sender || !trimmed.recipient || draft.lines.some((item) => !item.description.trim())) {
+      return setError("Enter both company names and a description for each item.");
     }
     if ([draft.senderDetails, draft.recipientDetails].some((details) => details.trim().split("\n").length > 6)) {
       return setError("Use up to six lines for each address and email block.");
@@ -71,15 +87,18 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
     }
   }
 
-  return <form className="invoice-grid" onSubmit={submit}>
+  return <><form className="invoice-grid" onSubmit={submit}>
     <section className="card invoice-editor" aria-label="Invoice details">
-      <div className="card-heading"><div><h2>Invoice details</h2><p className="muted">Fill in the template or start from an existing project.</p></div></div>
+      <div className="card-heading invoice-heading">
+        <div><h2>Invoice details</h2><p className="muted">Fill in the template or start from an existing project.</p></div>
+        <button type="button" className="button quiet" disabled={busy} onClick={() => setConfirmNew(true)}><Plus size={15} /> New invoice</button>
+      </div>
       <div className="invoice-prefill">
         <label className="field">Project<select aria-label="Project" value={projectId} onChange={(event) => setProjectId(event.target.value)}><option value="">Choose a project</option>{projects.map((project) => <option value={project.id} key={project.id}>{project.name}</option>)}</select></label>
         <button className="button quiet" type="button" disabled={!selectedProject} onClick={() => selectedProject && fillFromProject(selectedProject)}>Use project details</button>
       </div>
       <div className="form-grid">
-        <label className="field full">Invoice number<input value={draft.number} onChange={(event) => field("number", event.target.value)} maxLength={40} required /></label>
+        <label className="field full">Invoice number<input className="invoice-number" value={draft.number} readOnly /></label>
         <label className="field">Issue date<input type="date" value={draft.issued} onChange={(event) => field("issued", event.target.value)} required /></label>
         <label className="field">Due date<input type="date" value={draft.due} min={draft.issued} onChange={(event) => field("due", event.target.value)} required /></label>
         <label className="field">Your company<input value={draft.sender} onChange={(event) => field("sender", event.target.value)} maxLength={100} required /></label>
@@ -104,15 +123,34 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="invoice-actions"><button type="submit" className="button primary" disabled={busy}><Download size={17} /> {busy ? "Generating…" : "Download PDF"}</button></div>
     </section>
-    <aside className="card invoice-preview">
+    <aside className="card invoice-preview" aria-label="Invoice preview">
       <div className="card-heading"><div><h2>Invoice preview</h2><p className="muted">Updates as you edit</p></div><span className="metric-icon lavender"><FileText size={17} /></span></div>
       <div className="preview-sheet">
-        <div className="preview-banner"><div><strong>INVOICE</strong><span>{draft.number || "Invoice number"}</span></div><div><small>ISSUED</small><span>{draft.issued ? formatDate(draft.issued) : "—"}</span>{draft.due && <span>Due {formatDate(draft.due)}</span>}</div></div>
-        <div className="preview-parties"><div><small>FROM</small><strong>{draft.sender || "Your company"}</strong><span>{draft.senderDetails}</span></div><div><small>BILL TO</small><strong>{draft.recipient || "Client company"}</strong><span>{draft.recipientDetails}</span></div></div>
-        <div className="preview-lines"><div><strong>Description</strong><strong>Amount</strong></div>{draft.lines.map((item) => <div key={item.id}><span>{item.description || "Project service"}</span><span>{money(Number(item.quantity) * Math.round(Number(item.rate) * 100))}</span></div>)}</div>
-        <div className="preview-totals"><div><span>Subtotal</span><strong>{money(total)}</strong></div><div><span>Paid</span><strong>{money(paid)}</strong></div><div className="preview-balance"><strong>Balance due</strong><strong>{money(total - paid)}</strong></div></div>
-        {draft.notes && <p className="preview-notes">{draft.notes}</p>}
+        <header className="preview-banner">
+          <div className="preview-brand"><span aria-hidden="true" /><strong>{draft.sender || "Your company"}</strong></div>
+          <div className="preview-title"><h3>Invoice</h3><p>Issued {formatInvoiceDate(draft.issued) || "—"}</p></div>
+        </header>
+        <div className="preview-parties"><div><h4>Invoice to</h4><strong>{draft.recipient || "Client company"}</strong><p>{draft.recipientDetails}</p></div><div><h4>Bill from</h4><strong>{draft.sender || "Your company"}</strong><p>{draft.senderDetails}</p></div></div>
+        <div className="preview-meta"><span>Payment due {formatInvoiceDate(draft.due) || "—"}</span><strong>Invoice no. {draft.number}</strong></div>
+        <table className="preview-lines">
+          <thead><tr><th scope="col">No.</th><th scope="col">Item description</th><th className="preview-detail" scope="col">Price</th><th className="preview-detail" scope="col">Qty</th><th scope="col">Total</th></tr></thead>
+          <tbody>{draft.lines.map((item, index) => <tr key={item.id}>
+            <td>{index + 1}</td>
+            <td>{item.description || "Project service"}<small className="preview-quantity">{item.quantity || "0"} × {money(Math.round(Number(item.rate) * 100))}</small></td>
+            <td className="preview-detail">{money(Math.round(Number(item.rate) * 100))}</td><td className="preview-detail">{item.quantity || "0"}</td><td>{money(invoiceLineTotal(item))}</td>
+          </tr>)}</tbody>
+        </table>
+        <div className="preview-summary">
+          <dl className="preview-balance"><dt>Total due</dt><dd>{money(total - paid)}</dd></dl>
+          <dl className="preview-totals"><div><dt>Subtotal</dt><dd>{money(total)}</dd></div><div><dt>Amount paid</dt><dd>{money(paid)}</dd></div></dl>
+        </div>
+        {draft.notes.trim() && <div className="preview-notes"><h4>Payment details / notes</h4><p>{draft.notes}</p></div>}
+        <footer className="preview-footer"><span>Invoice {draft.number}</span><span>MYR</span></footer>
       </div>
     </aside>
-  </form>;
+  </form>
+  {confirmNew && <Modal title="Start a new invoice" caption="This replaces the current draft and keeps your company details." onClose={() => setConfirmNew(false)}>
+    <div className="modal-actions"><button type="button" className="button quiet" onClick={() => setConfirmNew(false)}>Cancel</button><button type="button" className="button primary" onClick={startNewInvoice}>Start new invoice</button></div>
+  </Modal>}
+  </>;
 }

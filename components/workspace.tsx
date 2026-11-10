@@ -108,12 +108,11 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
   return <div className="app-shell">
     <header className="topbar">
       <button className="brand-button" aria-label="DnishDev overview" onClick={() => navigate("Overview")}><Brand /></button>
-      <nav className="top-nav" aria-label="Main navigation">{pages.map(({ name, icon: Icon }) => <button key={name} aria-current={page === name ? "page" : undefined} className={page === name ? "selected" : ""} onClick={() => navigate(name)}><Icon size={16} />{name}</button>)}</nav>
       <div className="top-right"><span className="connection"><i className={live || !cloudConfigured ? "online" : ""} />{cloudConfigured ? live ? "Live sync" : "Cloud workspace" : "Demo workspace"}</span><button className="avatar" aria-label="Workspace account" onClick={() => { setAccountError(""); setDialog({ mode: "account" }); }}>{session?.user.email?.slice(0, 2).toUpperCase() || "DD"}</button></div>
     </header>
     <div className="workspace-layout">
       <aside className="rail">
-        <nav aria-label="Workspace shortcuts">{pages.map(({ name, icon: Icon }) => <button key={name} title={name} aria-label={name} aria-current={page === name ? "page" : undefined} className={page === name ? "selected" : ""} onClick={() => navigate(name)}><Icon size={19} /></button>)}</nav>
+        <nav aria-label="Main navigation">{pages.map(({ name, icon: Icon }) => <button key={name} title={name} aria-label={name} aria-current={page === name ? "page" : undefined} className={page === name ? "selected" : ""} onClick={() => navigate(name)}><Icon size={19} /></button>)}</nav>
         <button className="rail-account" title="Workspace account" aria-label="Workspace settings" onClick={() => setDialog({ mode: "account" })}><UserRound size={18} /></button>
       </aside>
       <main className="main-content">

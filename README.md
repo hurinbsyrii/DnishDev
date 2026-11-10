@@ -25,7 +25,7 @@ Open [localhost:3000](http://localhost:3000). The app starts in demo mode with s
 - Project milestones are **Project won → Deposit paid → Project complete → Paid in full → Published**. A project with no deposit can move straight to **Project complete**. **Published** records the handoff milestone in DnishDev.
 - Profit is recorded cash received minus recorded project costs. The month is based on the actual payment and cost dates in Malaysia time. Each project tracks one deposit, one final payment, and one aggregated cost.
 - Projects with no end date appear on their start date in the calendar. Marking one complete sets its end date to the completion date. The calendar uses Monday-based ISO week numbers, and the deadline countdown uses Malaysia dates.
-- The invoice editor can prefill a project's client, fee, and payments. It keeps one editable draft per workspace in the current browser and downloads a PDF. The PDF preview and download use the information in the draft.
+- The invoice editor can prefill a project's client, fee, and payments. It keeps one editable draft per workspace in the current browser. Each new draft gets its own invoice number, which stays the same when you edit it or download the PDF again. Choose **New invoice** to start a fresh draft with your company details filled in.
 
 ## Checks
 
