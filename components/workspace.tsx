@@ -112,8 +112,32 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
     </header>
     <div className="workspace-layout">
       <aside className="rail">
-        <nav aria-label="Main navigation">{pages.map(({ name, icon: Icon }) => <button key={name} title={name} aria-label={name} aria-current={page === name ? "page" : undefined} className={page === name ? "selected" : ""} onClick={() => navigate(name)}><Icon size={19} /></button>)}</nav>
-        <button className="rail-account" title="Workspace account" aria-label="Workspace settings" onClick={() => setDialog({ mode: "account" })}><UserRound size={18} /></button>
+        <nav aria-label="Main navigation">
+          {pages.map(({ name, icon: Icon }) => (
+            <button
+              key={name}
+              title={name}
+              aria-label={name}
+              aria-current={page === name ? "page" : undefined}
+              className={page === name ? "selected" : ""}
+              onClick={() => navigate(name)}
+            >
+              <Icon size={19} />
+            </button>
+          ))}
+        </nav>
+        <button
+          className={`rail-account ${dialog?.mode === "account" ? "selected" : ""}`}
+          title="Workspace account"
+          aria-label="Workspace settings"
+          aria-current={dialog?.mode === "account" ? "page" : undefined}
+          onClick={() => {
+            setAccountError("");
+            setDialog((prev) => (prev?.mode === "account" ? null : { mode: "account" }));
+          }}
+        >
+          <UserRound size={18} />
+        </button>
       </aside>
       <main className="main-content">
         <div className="breadcrumb">Workspace <ChevronRight size={13} /> <span>{page}</span></div>
