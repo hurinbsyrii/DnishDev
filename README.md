@@ -49,3 +49,7 @@ The production build exports the app to `out/`. Supabase authentication, project
 5. Deploy and sign in with your existing Supabase user. Rebuild the site after changing either Supabase variable because these values are embedded at build time.
 
 To preview the exported production build locally, run `pnpm build` then `pnpm start`.
+
+## Deploy the static build through Cloudflare Workers
+
+For the Workers Git setup screen, use build command `pnpm run build`, deploy command `npx wrangler deploy`, and preview command `npx wrangler versions upload`. The committed `wrangler.jsonc` sets the Worker name, compatibility date, and `out/` assets directory. Use the same build environment variables listed above.
