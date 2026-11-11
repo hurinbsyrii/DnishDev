@@ -136,7 +136,8 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
               className={page === name ? "selected" : ""}
               onClick={() => navigate(name)}
             >
-              <Icon size={19} />
+              <Icon size={19} aria-hidden="true" />
+              <span className="rail-label">{name}</span>
             </button>
           ))}
         </nav>
