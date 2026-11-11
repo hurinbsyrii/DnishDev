@@ -100,8 +100,8 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
       </div>
       <div className="form-grid">
         <label className="field full">Invoice number<input className="invoice-number" value={draft.number} readOnly /></label>
-        <label className="field">Issue date<input type="date" value={draft.issued} onChange={(event) => field("issued", event.target.value)} required /></label>
-        <label className="field">Due date<input type="date" value={draft.due} min={draft.issued} onChange={(event) => field("due", event.target.value)} required /></label>
+        <label className="field invoice-date-field">Issue date<input type="date" value={draft.issued} onChange={(event) => field("issued", event.target.value)} required /></label>
+        <label className="field invoice-date-field">Due date<input type="date" value={draft.due} min={draft.issued} onChange={(event) => field("due", event.target.value)} required /></label>
         <label className="field">Your company name<input value={draft.sender} onChange={(event) => field("sender", event.target.value)} maxLength={100} placeholder="Your company name" required /></label>
         <label className="field">Client company<input value={draft.recipient} onChange={(event) => field("recipient", event.target.value)} maxLength={100} placeholder="Company name" required /></label>
         <label className="field">Your address and email<textarea rows={3} maxLength={260} value={draft.senderDetails} onChange={(event) => field("senderDetails", event.target.value)} /></label>

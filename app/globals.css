@@ -468,6 +468,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .project-link { min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
   .project-link .project-mark { width: 28px; height: 28px; border-radius: 8px; }
   .calendar-card, .invoice-editor, .invoice-preview { padding: 12px; }
+  .invoice-date-field { grid-column: 1 / -1; }
   .mascot-peeking { width: 62px; height: 42px; }
   .mascot-waving { width: 50px; height: 46px; }
   .calendar-card > .card-heading { flex-wrap: wrap; }
