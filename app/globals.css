@@ -41,6 +41,7 @@ small { font-size: 12px; }
 .brand-button { flex-shrink: 0; text-align: left; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 840; letter-spacing: -.8px; line-height: 1; }
 .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; background: #24232a; color: var(--lime); border-radius: 12px; }
+.brand-mark img { width: 38px; height: 38px; object-fit: contain; }
 .brand-dev { font-weight: 650; }
 .brand small { display: block; margin-top: 6px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: 1.22px; }
 .connection, .date-pill, .period-tag {
@@ -98,20 +99,23 @@ h1 { font-size: clamp(31px, 3.6vw, 53px); line-height: 1.12; font-weight: 760; l
 
 .card { min-width: 0; background: var(--paper); border: 1px solid #ffffffbd; border-radius: 23px; }
 .bento { display: grid; grid-template-columns: 1.22fr 1fr 1fr .88fr; grid-template-rows: minmax(142px, auto) minmax(175px, auto); gap: 11px; }
-.profit-card { position: relative; display: flex; flex-direction: column; min-height: 328px; grid-row: 1 / 3; padding: 20px; overflow: hidden; isolation: isolate; background: radial-gradient(ellipse at 75% 60%, #f4effe, transparent 63%), linear-gradient(150deg, #e5dffa, #e5def5 76%, #dcd1f2); }
-.profit-top, .metric-top, .profit-footer, .card-heading { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
-.profit-top { justify-content: flex-start; }
+.profit-card { --profit-inset: 20px; display: grid; grid-template-rows: auto auto 1fr; gap: 12px; min-height: 328px; grid-row: 1 / 3; padding: var(--profit-inset) var(--profit-inset) 0; overflow: hidden; background: linear-gradient(145deg, #f2edff, #e4d9fa 85%); }
+.profit-top, .metric-top, .card-heading { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.profit-label { display: flex; align-items: center; gap: 8px; color: #514a60; font-size: 13px; font-weight: 800; }
 .metric-icon { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: #f1f0f5; color: #4e465d; }
 .profit-top .metric-icon { background: #ffffff9c; color: #64518f; }
 .metric-icon.green { background: #ecf6ca; color: #465d20; }
 .metric-icon.lavender { background: #eee8fa; color: #654b9d; }
-.profit-value { position: relative; z-index: 1; margin-top: 15px; }
-.profit-value p, .metric-card p { color: #514a60; font-size: 12px; font-weight: 730; }
+.profit-value { min-width: 0; }
+.profit-value p { margin-top: 4px; color: #514a60; font-size: 11px; font-weight: 700; }
+.metric-card p { color: #514a60; font-size: 12px; font-weight: 730; }
 .profit-value strong { font-size: clamp(22px, 2.65vw, 39px); font-weight: 790; line-height: 1.2; letter-spacing: -.07em; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.prism { display: block; width: min(90%, 230px); height: 155px; margin: 0 auto; min-height: 125px; }
-.profit-footer { gap: 5px; margin-top: auto; color: #504363; font-size: 10px; font-weight: 750; }
-.profit-footer .icon-button { background: #f9f6fecc; width: 31px; height: 31px; }
-.profit-footer .icon-button:hover { background: white; }
+.profit-art { align-self: end; margin-inline: calc(-1 * var(--profit-inset)); min-width: 0; }
+.profit-mascot { display: block; width: 100%; height: auto; pointer-events: none; }
+.monthly-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(32px, 24%); gap: 4px; align-items: center; }
+.monthly-mascot { width: 100%; max-width: 68px; height: auto; justify-self: end; pointer-events: none; }
+.profit-top .icon-button { background: #f9f6fecc; width: 31px; height: 31px; }
+.profit-top .icon-button:hover { background: white; }
 .metric-card { padding: 16px 17px 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 7px; }
 .metric-card.monthly-card { background: #f8fbeb; }
 .metric-card strong { display: block; margin-top: 3px; font-size: clamp(20px, 2vw, 30px); font-weight: 790; letter-spacing: -.065em; line-height: 1.16; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
@@ -123,6 +127,11 @@ h1 { font-size: clamp(31px, 3.6vw, 53px); line-height: 1.12; font-weight: 760; l
 .card-heading { gap: 8px 16px; align-items: flex-start; }
 .card-heading h2 { font-size: 17px; font-weight: 820; letter-spacing: -.55px; line-height: 1.35; }
 .card-heading .muted { margin-top: 2px; }
+.mascot-heading { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.mascot { display: block; flex: none; object-fit: contain; pointer-events: none; user-select: none; }
+.mascot-peeking { width: 80px; height: 53px; align-self: end; margin-bottom: -10px; }
+.mascot-waving { width: 62px; height: 57px; }
+.mascot-sitting { width: 72px; height: 66px; margin: -14px -7px -20px 0; align-self: flex-end; }
 .chart-plot { display: grid; grid-template-rows: minmax(76px, 1fr) auto; min-width: 0; }
 .chart-plot svg { display: block; width: 100%; height: 100%; max-height: 94px; overflow: visible; }
 .chart-labels { position: relative; min-height: 15px; margin-top: -2px; font-size: 10px; color: #6b6574; font-weight: 700; }
@@ -360,11 +369,11 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .search:focus-within { box-shadow: 0 0 0 2px #e2d9f5; }
 
   @media (hover: hover) and (pointer: fine) {
-    .prism, .brand-mark, .project-mark, .date-block, .text-button svg, .new-project svg,
+    .monthly-mascot, .brand-mark, .project-mark, .date-block, .text-button svg, .new-project svg,
     .deadline-list button > svg, .agenda-row > svg {
       transition: translate 240ms var(--ease-out), rotate 240ms var(--ease-out), border-radius 240ms var(--ease-out);
     }
-    .profit-card:hover .prism { translate: 0 -4px; rotate: -3deg; }
+    .monthly-card:hover .monthly-mascot { translate: 0 -3px; rotate: -3deg; }
     .brand-button:hover .brand-mark, .project-link:hover .project-mark, .agenda-row:hover .project-mark,
     .deadline-list button:hover .date-block { border-radius: 40%; rotate: -5deg; }
     .text-button:hover svg, .deadline-list button:hover > svg, .agenda-row:hover > svg { translate: 2px -1px; }
@@ -386,7 +395,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .connection { display: none; }
   .workspace-layout { grid-template-columns: 56px minmax(0, 1fr); }
   .main-content { padding-right: 16px; }
-  .profit-card { padding: 16px; }
+  .profit-card { --profit-inset: 16px; }
   .metric-card { padding: 14px 12px; }
   .dashboard-bottom { grid-template-columns: minmax(0, 1fr) minmax(190px, .43fr); }
   .projects-card, .deadlines-card { padding: 13px; }
@@ -407,11 +416,8 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .date-pill { min-height: 36px; }
   .heading-actions .button { min-height: 36px; }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; gap: 8px; }
-  .profit-card { grid-column: 1 / -1; grid-row: auto; min-height: 195px; justify-content: space-between; padding: 15px; }
-  .profit-value { max-width: 66%; margin: 0; }
+  .profit-card { --profit-inset: 14px; grid-column: 1 / -1; grid-row: auto; gap: 8px; min-height: 0; }
   .profit-value strong { font-size: clamp(24px, 6.5vw, 37px); }
-  .prism { position: absolute; width: 43%; height: 100%; right: 0; top: 0; min-height: 0; z-index: -1; }
-  .profit-footer { margin: 0; }
   .metric-card { min-height: 119px; }
   .active-card { grid-column: 1 / -1; min-height: 86px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; }
   .chart-card { grid-column: 1 / -1; min-height: 154px; padding: 13px; }
@@ -427,6 +433,8 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .project-link { min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
   .project-link .project-mark { width: 28px; height: 28px; border-radius: 8px; }
   .calendar-card, .invoice-editor, .invoice-preview { padding: 12px; }
+  .mascot-peeking { width: 62px; height: 42px; }
+  .mascot-waving { width: 50px; height: 46px; }
   .calendar-card > .card-heading { flex-wrap: wrap; }
   .line-item { grid-template-columns: minmax(42px, .5fr) minmax(0, 1fr) 34px; }
   .line-item .field:first-child { grid-column: 1 / -1; }

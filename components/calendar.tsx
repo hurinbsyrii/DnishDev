@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { addDays, dateKey, dateValue, formatDate, isoWeek, type Project } from "@/lib/projects";
 import { ProjectMark } from "./ui";
@@ -25,7 +26,7 @@ export function Calendar({ projects, today, onProject }: { projects: Project[]; 
 
   return <section className="card calendar-card" aria-label="Project calendar">
     <div className="card-heading">
-      <div className="calendar-month" key={month}><h2>{formatDate(first, { month: "long", year: "numeric" })}</h2><p className="muted">{projects.filter((project) => overlaps(project, first, last)).length} scheduled projects</p></div>
+      <div className="mascot-heading"><div className="calendar-month" key={month}><h2>{formatDate(first, { month: "long", year: "numeric" })}</h2><p className="muted">{projects.filter((project) => overlaps(project, first, last)).length} scheduled projects</p></div><Image className="mascot mascot-waving" src="/mascot/waving.webp" alt="" width={62} height={57} unoptimized /></div>
       <div className="calendar-controls">
         <button className="button quiet" onClick={() => setSelected(today)}>Today</button>
         <button className="icon-button" aria-label="Previous month" onClick={() => move(-1)}><ChevronLeft size={19} /></button>

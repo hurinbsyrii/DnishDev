@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowRight, CalendarDays, ChevronRight, Code2, FileText, FolderKanban, LayoutGrid, Plus, ShieldCheck, UserRound } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, CalendarDays, ChevronRight, FileText, FolderKanban, LayoutGrid, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { categories as projectCategories, formatDate, todayInMalaysia, type Project } from "@/lib/projects";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
 import { useProjects } from "@/lib/use-projects";
@@ -22,7 +23,7 @@ type Page = typeof pages[number]["name"];
 type Dialog = { mode: "new" | "account" } | { mode: "details" | "edit"; id: string };
 
 function Brand() {
-  return <div className="brand"><span className="brand-mark"><Code2 size={21} strokeWidth={2.5} /></span><span>Dev<span className="brand-dev">Dash</span><small>FREELANCE STUDIO</small></span></div>;
+  return <div className="brand"><span className="brand-mark"><Image src="/mascot/logo.webp" width={38} height={38} alt="" unoptimized priority /></span><span>Dev<span className="brand-dev">Dash</span><small>FREELANCE STUDIO</small></span></div>;
 }
 
 function Login() {

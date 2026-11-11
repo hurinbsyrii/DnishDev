@@ -1,32 +1,11 @@
 "use client";
 
 import { useId } from "react";
+import Image from "next/image";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, Clock3, FolderKanban, Search, Wallet } from "lucide-react";
 import { balance, daysBetween, deadline, formatDate, money, profitFor, projectStage, type Project } from "@/lib/projects";
 import { RollingMoney, RollingNumber } from "./rolling-number";
 import { ProjectMark, Status } from "./ui";
-
-function Prism() {
-  const id = useId();
-  return <svg className="prism" viewBox="0 0 220 184" fill="none" aria-hidden="true">
-    <defs>
-      <linearGradient id={id + "a"} x1="52" y1="106" x2="158" y2="27" gradientUnits="userSpaceOnUse"><stop stopColor="#e9e5ff"/><stop offset=".5" stopColor="#ada2f0"/><stop offset="1" stopColor="#7260d0"/></linearGradient>
-      <linearGradient id={id + "b"} x1="90" y1="36" x2="174" y2="112" gradientUnits="userSpaceOnUse"><stop stopColor="#f6efff"/><stop offset=".55" stopColor="#c5bafa"/><stop offset="1" stopColor="#8a7ae0"/></linearGradient>
-      <linearGradient id={id + "c"} x1="68" y1="143" x2="148" y2="99" gradientUnits="userSpaceOnUse"><stop stopColor="#c8bdf6"/><stop offset=".6" stopColor="#8f7cde"/><stop offset="1" stopColor="#f3eaff"/></linearGradient>
-      <radialGradient id={id + "d"}><stop stopColor="#6c58b7" stopOpacity=".28"/><stop offset="1" stopColor="#6c58b7" stopOpacity="0"/></radialGradient>
-    </defs>
-    <ellipse cx="111" cy="162" rx="72" ry="13" fill={`url(#${id}d)`} />
-    <ellipse cx="111" cy="105" rx="92" ry="31" transform="rotate(-15 111 105)" stroke="#a89cd7" strokeOpacity=".58" strokeDasharray="3 5"/>
-    <path d="M110 11 52 101l57 14z" fill={`url(#${id}a)`}/>
-    <path d="m110 11 57 90-58 14z" fill={`url(#${id}b)`}/>
-    <path d="m52 101 58-37-1 51z" fill="#c4b5f6" fillOpacity=".7"/>
-    <path d="m110 64 57 37-58 14z" fill="#7966cc" fillOpacity=".57"/>
-    <path d="m52 108 57 13 58-13-56 47z" fill={`url(#${id}c)`}/>
-    <path d="m109 121 58-13-56 47z" fill="#edddff" fillOpacity=".39"/>
-    <path d="m110 11-1 104m-57-14 57 14 58-14m-58 20 2 34" stroke="#fff" strokeOpacity=".56" strokeWidth="1.2"/>
-    <circle cx="34" cy="125" r="3.8" fill="#e9f7a0"/><circle cx="183" cy="79" r="3.2" fill="#a497e4"/><path d="M175 38v14m-7-7h14M42 67v8m-4-4h8" stroke="#a99bdc" strokeLinecap="round"/>
-  </svg>;
-}
 
 function ProfitChart({ projects, today }: { projects: Project[]; today: string }) {
   const gradient = useId();
@@ -66,7 +45,7 @@ export function ProjectList({ projects, today, onProject, search, setSearch, cat
 
   return <section className="card projects-card" aria-labelledby="project-list-heading">
     <div className="card-heading project-heading">
-      <div><h2 id="project-list-heading">Projects</h2><p className="muted">{projects.length} {projects.length === 1 ? "project" : "projects"} in your workspace</p></div>
+      <div className="mascot-heading"><div><h2 id="project-list-heading">Projects</h2><p className="muted">{projects.length} {projects.length === 1 ? "project" : "projects"} in your workspace</p></div><Image className="mascot mascot-peeking" src="/mascot/peeking.webp" alt="" width={80} height={53} unoptimized /></div>
       <div className="table-controls">
         <label className="search"><Search size={16} /><input aria-label="Search projects" placeholder="Search projects…" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
         <select aria-label="Filter by category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item}>{item}</option>)}</select>
@@ -99,14 +78,24 @@ export function Dashboard({ projects, today, onCalendar, onProjects, onProject, 
   return <>
     <div className="bento">
       <section className="card profit-card">
-        <div className="profit-top"><span className="metric-icon"><Wallet size={18} /></span><span className="eyebrow">WORKSPACE EARNINGS</span></div>
-        <div className="profit-value"><p>All-time profit</p><strong><RollingMoney cents={allTime} /></strong></div>
-        <Prism />
-        <div className="profit-footer"><span>Payments received − project costs</span><button className="icon-button" aria-label="View projects" onClick={onProjects}><ArrowUpRight size={17} /></button></div>
+        <div className="profit-top">
+          <div className="profit-label"><span className="metric-icon"><Wallet size={18} /></span><h2>All-time profit</h2></div>
+          <button className="icon-button" aria-label="View projects" onClick={onProjects}><ArrowUpRight size={17} /></button>
+        </div>
+        <div className="profit-value">
+          <strong><RollingMoney cents={allTime} /></strong>
+          <p>Payments received − project costs</p>
+        </div>
+        <div className="profit-art">
+          <Image className="profit-mascot" src="/mascot/wide-peek.webp" width={900} height={450} alt="" unoptimized />
+        </div>
       </section>
       <section className="card metric-card monthly-card">
         <div className="metric-top"><span className="metric-icon green"><Wallet size={17} /></span><span className="period-tag">{formatDate(today, { month: "short" })}</span></div>
-        <div><p>Profit this month</p><strong><RollingMoney cents={monthly} /></strong></div>
+        <div className="monthly-summary">
+          <div><p>Profit this month</p><strong><RollingMoney cents={monthly} /></strong></div>
+          <Image className="monthly-mascot" src="/mascot/coin.webp" width={384} height={395} alt="" unoptimized />
+        </div>
         <small>{monthly < 0 ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />} Net cash this month</small>
       </section>
       <section className="card metric-card outstanding-card">

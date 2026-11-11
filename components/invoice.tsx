@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Download, FileText, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { Download, Plus, Trash2 } from "lucide-react";
 import { addDays, balance, money, type Project } from "@/lib/projects";
 import { downloadInvoice, formatInvoiceDate, invoiceLineTotal, invoiceNumber, invoiceTotal, type InvoiceDraft, type LineItem } from "@/lib/invoice";
 import { Modal } from "./ui";
@@ -20,7 +21,7 @@ function loadDraft(storageKey: string, today: string): InvoiceDraft {
     const raw = localStorage.getItem(storageKey);
     if (raw) {
       const saved = JSON.parse(raw) as InvoiceDraft;
-      return { ...saved, sender: saved.sender === "DnishDev" ? "DevDash" : saved.sender, number: saved.number?.trim() || invoiceNumber(today) };
+      return { ...saved, number: saved.number?.trim() || invoiceNumber(today) };
     }
   } catch {
     // The invoice editor still works if browser storage is unavailable.
@@ -101,7 +102,7 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
         <label className="field full">Invoice number<input className="invoice-number" value={draft.number} readOnly /></label>
         <label className="field">Issue date<input type="date" value={draft.issued} onChange={(event) => field("issued", event.target.value)} required /></label>
         <label className="field">Due date<input type="date" value={draft.due} min={draft.issued} onChange={(event) => field("due", event.target.value)} required /></label>
-        <label className="field">Your company<input value={draft.sender} onChange={(event) => field("sender", event.target.value)} maxLength={100} required /></label>
+        <label className="field">Your company name<input value={draft.sender} onChange={(event) => field("sender", event.target.value)} maxLength={100} placeholder="Your company name" required /></label>
         <label className="field">Client company<input value={draft.recipient} onChange={(event) => field("recipient", event.target.value)} maxLength={100} placeholder="Company name" required /></label>
         <label className="field">Your address and email<textarea rows={3} maxLength={260} value={draft.senderDetails} onChange={(event) => field("senderDetails", event.target.value)} /></label>
         <label className="field">Client address and email<textarea rows={3} maxLength={260} value={draft.recipientDetails} onChange={(event) => field("recipientDetails", event.target.value)} /></label>
@@ -124,7 +125,7 @@ export function Invoice({ projects, today, owner }: { projects: Project[]; today
       <div className="invoice-actions"><button type="submit" className="button primary" disabled={busy}><Download size={17} /> {busy ? "Generating…" : "Download PDF"}</button></div>
     </section>
     <aside className="card invoice-preview" aria-label="Invoice preview">
-      <div className="card-heading"><div><h2>Invoice preview</h2><p className="muted">Updates as you edit</p></div><span className="metric-icon lavender"><FileText size={17} /></span></div>
+      <div className="card-heading"><div><h2>Invoice preview</h2><p className="muted">Updates as you edit</p></div><Image className="mascot mascot-sitting" src="/mascot/sitting.webp" alt="" width={72} height={66} unoptimized /></div>
       <div className="preview-sheet">
         <header className="preview-banner">
           <div className="preview-brand"><span aria-hidden="true" /><strong>{draft.sender || "Your company"}</strong></div>
