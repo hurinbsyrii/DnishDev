@@ -25,7 +25,7 @@ export function Calendar({ projects, today, onProject }: { projects: Project[]; 
 
   return <section className="card calendar-card" aria-label="Project calendar">
     <div className="card-heading">
-      <div><h2>{formatDate(first, { month: "long", year: "numeric" })}</h2><p className="muted">{projects.filter((project) => overlaps(project, first, last)).length} scheduled projects</p></div>
+      <div className="calendar-month" key={month}><h2>{formatDate(first, { month: "long", year: "numeric" })}</h2><p className="muted">{projects.filter((project) => overlaps(project, first, last)).length} scheduled projects</p></div>
       <div className="calendar-controls">
         <button className="button quiet" onClick={() => setSelected(today)}>Today</button>
         <button className="icon-button" aria-label="Previous month" onClick={() => move(-1)}><ChevronLeft size={19} /></button>
@@ -50,7 +50,7 @@ export function Calendar({ projects, today, onProject }: { projects: Project[]; 
         </tr>)}</tbody>
       </table>
     </div>
-    <div className="calendar-agenda">
+    <div className="calendar-agenda" key={selected}>
       <h3>{formatDate(selected, { weekday: "long", day: "numeric", month: "long" })} <span>· Week {isoWeek(selected)}</span></h3>
       {selectedProjects.length === 0 && <p className="muted">No projects scheduled for this day.</p>}
       {selectedProjects.map((project) => <button className="agenda-row" key={project.id} onClick={() => onProject(project)}><ProjectMark project={project} /><span><strong>{project.name}</strong><small>{formatDate(project.start_date)} – {project.end_date ? formatDate(project.end_date) : "No end date"}</small></span><ArrowUpRight size={16} /></button>)}

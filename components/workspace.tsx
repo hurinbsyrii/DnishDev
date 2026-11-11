@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { ArrowRight, CalendarDays, ChevronRight, Code2, FileText, FolderKanban, LayoutGrid, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { categories as projectCategories, formatDate, todayInMalaysia, type Project } from "@/lib/projects";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
@@ -70,7 +70,8 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
       || a.name.localeCompare(b.name);
   });
   const categories = [...new Set([...projectCategories, ...sorted.map((project) => project.category)])].sort();
-  const current = pages.find((item) => item.name === page)!;
+  const pageIndex = pages.findIndex((item) => item.name === page);
+  const current = pages[pageIndex];
   const selected = dialog && "id" in dialog ? projects.find((item) => item.id === dialog.id) : null;
 
   useEffect(() => {
@@ -81,8 +82,8 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
   }, []);
 
   function navigate(next: Page) {
-    setPage(next);
     setDialog(null);
+    setPage(next);
     setSearch("");
     setCategory("");
   }
@@ -103,7 +104,18 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
 
   const open = (project: Project) => setDialog({ mode: "details", id: project.id });
   const close = () => setDialog(null);
-  const list = <ProjectList projects={sorted} today={today} onProject={open} search={search} setSearch={setSearch} category={categories.includes(category) ? category : ""} setCategory={setCategory} categories={categories} />;
+  const renderList = () => (
+    <ProjectList
+      projects={sorted}
+      today={today}
+      onProject={open}
+      search={search}
+      setSearch={setSearch}
+      category={categories.includes(category) ? category : ""}
+      setCategory={setCategory}
+      categories={categories}
+    />
+  );
 
   return <div className="app-shell">
     <header className="topbar">
@@ -112,7 +124,8 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
     </header>
     <div className="workspace-layout">
       <aside className="rail">
-        <nav aria-label="Main navigation">
+        <nav aria-label="Main navigation" style={{ "--active-page": pageIndex } as CSSProperties}>
+          <span className="rail-indicator" aria-hidden="true" />
           {pages.map(({ name, icon: Icon }) => (
             <button
               key={name}
@@ -142,19 +155,20 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
       <main className="main-content">
         <div className="breadcrumb">Workspace <ChevronRight size={13} /> <span>{page}</span></div>
         <div className="page-heading">
-          <div><p className="eyebrow"><span /> YOUR FREELANCE STUDIO</p><h1>{current.title}</h1><p className="page-description">{current.description}</p></div>
+          <div className="heading-copy" key={page}><p className="eyebrow"><span /> YOUR FREELANCE STUDIO</p><h1>{current.title}</h1><p className="page-description">{current.description}</p></div>
           <div className="heading-actions">
             <span className="date-pill"><CalendarDays size={16} /> {formatDate(today, { day: "numeric", month: "short", year: "numeric" })}</span>
             {page !== "Invoices" && <button className="button primary new-project" onClick={() => setDialog({ mode: "new" })}><Plus size={18} /> New project</button>}
           </div>
         </div>
         {loadError && <div className="error-banner" role="alert">{loadError}<button className="button quiet" onClick={retry}>Retry</button></div>}
-        {loading ? <div className="card empty" role="status">Loading projects…</div> : <>
-          {page === "Overview" && <Dashboard projects={sorted} today={today} onCalendar={() => navigate("Calendar")} onProjects={() => navigate("Projects")} onProject={open} list={list} />}
-          {page === "Projects" && list}
-          {page === "Calendar" && <Calendar projects={sorted} today={today} onProject={open} />}
-          {page === "Invoices" && <Invoice key={session?.user.id ?? "demo"} projects={sorted} today={today} owner={session?.user.id ?? "demo"} />}
-        </>}
+        {loading ? <div className="card empty" role="status">Loading projects…</div> :
+          <div className="page-view" key={page}>
+            {page === "Overview" && <Dashboard projects={sorted} today={today} onCalendar={() => navigate("Calendar")} onProjects={() => navigate("Projects")} onProject={open} list={renderList()} />}
+            {page === "Projects" && renderList()}
+            {page === "Calendar" && <Calendar projects={sorted} today={today} onProject={open} />}
+            {page === "Invoices" && <Invoice key={session?.user.id ?? "demo"} projects={sorted} today={today} owner={session?.user.id ?? "demo"} />}
+          </div>}
         <footer className="workspace-footer"><span>DevDash Workspace</span><span>MYR <i /> Asia/Kuala_Lumpur</span></footer>
       </main>
     </div>

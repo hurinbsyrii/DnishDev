@@ -7,8 +7,8 @@
   },
   "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "cross-env NODE_OPTIONS=--experimental-require-module next dev",
+    "build": "cross-env NODE_OPTIONS=--experimental-require-module next build",
     "start": "serve out",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"

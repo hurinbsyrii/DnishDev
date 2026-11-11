@@ -8,6 +8,7 @@
   --line: #efedf3;
   --lime: #e7f68e;
   --lavender: #e9e4fa;
+  --ease-out: cubic-bezier(.2, .75, .25, 1);
   color-scheme: light;
 }
 
@@ -33,14 +34,8 @@ small { font-size: 12px; }
 .full { grid-column: 1 / -1; }
 
 .app-shell {
-  max-width: 1536px;
-  min-height: calc(100vh - 52px);
-  margin: 26px auto;
-  width: calc(100% - 56px);
+  min-height: 100vh;
   background: var(--surface);
-  border: 4px solid #ffffffdc;
-  border-radius: 30px;
-  box-shadow: 0 12px 48px #2c24490a;
 }
 .topbar { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 23px; border-bottom: 1px solid #e9e7ef; }
 .brand-button { flex-shrink: 0; text-align: left; }
@@ -61,7 +56,6 @@ small { font-size: 12px; }
   font-weight: 750;
 }
 .rail button:hover { background: #e0dce9; }
-.rail .selected, .rail .selected:hover { background: #24232a; color: white; }
 .top-right { display: flex; align-items: center; gap: 11px; }
 .connection { padding: 8px 11px; background: #eeedf2; font-size: 11px; }
 .connection i, .eyebrow span, .workspace-footer i { background: #a7a3b2; width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
@@ -70,10 +64,16 @@ small { font-size: 12px; }
 .avatar:hover { background: #d4c5f6; }
 
 .workspace-layout { display: grid; grid-template-columns: 69px minmax(0, 1fr); }
-.rail { display: flex; align-items: center; justify-content: space-between; flex-direction: column; padding: 32px 0 28px 5px; min-height: calc(100vh - 140px); }
-.rail nav { position: sticky; top: 14px; display: grid; gap: 9px; justify-items: center; }
-.rail button, .icon-button, .table-arrow { display: inline-grid; place-items: center; flex: none; width: 37px; height: 37px; background: #f0eff3; border-radius: 50%; color: #524f5c; transition: background .16s, color .16s; }
-.rail button { width: 39px; height: 39px; background: #ecebf1; }
+.rail { --rail-button-height: 39px; --rail-button-width: 39px; --rail-gap: 9px; display: flex; align-items: center; justify-content: space-between; flex-direction: column; padding: 32px 0 28px 5px; min-height: calc(100vh - 140px); }
+.rail nav { position: sticky; top: 14px; display: grid; gap: var(--rail-gap); justify-items: center; isolation: isolate; }
+.rail button, .icon-button, .table-arrow { display: inline-grid; place-items: center; flex: none; width: 37px; height: 37px; background: #f0eff3; border-radius: 50%; color: #524f5c; }
+.rail button { width: var(--rail-button-width); height: var(--rail-button-height); background: #ecebf1; }
+.rail nav button, .rail nav button:hover { position: relative; background: transparent; }
+.rail nav button::before { content: ""; position: absolute; inset: 0; z-index: -2; border-radius: 50%; background: #ecebf1; }
+.rail nav button:hover::before { background: #e0dce9; }
+.rail nav .selected { color: white; }
+.rail .rail-account.selected { color: white; background: #24232a; border-radius: 32%; }
+.rail-indicator { position: absolute; inset: 0 0 auto; z-index: -1; height: var(--rail-button-height); background: #24232a; border-radius: 32%; pointer-events: none; translate: 0 calc(var(--active-page) * (var(--rail-button-height) + var(--rail-gap))); }
 .rail .rail-account { position: sticky; bottom: 24px; margin-top: auto; }
 .icon-button:hover, .table-arrow:hover { background: #e8e1f5; color: #302747; }
 .main-content { min-width: 0; padding: 25px 23px 0 9px; }
@@ -87,7 +87,7 @@ h1 { font-size: clamp(31px, 3.6vw, 53px); line-height: 1.12; font-weight: 760; l
 .page-description { color: var(--muted); font-size: 13px; font-weight: 550; }
 .heading-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding-bottom: 2px; }
 .date-pill { min-height: 40px; padding: 0 14px; }
-.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 15px; border-radius: 50px; font-size: 12px; font-weight: 800; text-align: center; white-space: nowrap; transition: background .16s, color .16s; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 15px; border-radius: 50px; font-size: 12px; font-weight: 800; text-align: center; white-space: nowrap; }
 .primary { background: var(--lime); color: #262a19; }
 .primary:hover { background: #dbee72; }
 .quiet { background: #f0eff4; color: #433e51; }
@@ -289,6 +289,90 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 .login-screen { min-height: 100dvh; display: grid; place-items: center; padding: 18px; }
 .login-card { display: grid; gap: 24px; padding: 27px; width: min(100%, 410px); }
 .login-card h1 { font-size: 40px; margin: 6px 0; }
+.rolling-number { display: inline; font-variant-numeric: tabular-nums; }
+.number-reel { position: relative; display: inline-grid; overflow: clip; --reel-travel: 100%; }
+.number-reel[data-direction="down"] { --reel-travel: -100%; }
+.number-reel-out { display: none; }
+@keyframes reel-in {
+  from { translate: 0 var(--reel-travel); }
+}
+@keyframes reel-out {
+  to { translate: 0 calc(-1 * var(--reel-travel)); }
+}
+
+@keyframes content-in {
+  from { opacity: .65; translate: 0 7px; }
+}
+@keyframes panel-in {
+  from { opacity: .45; transform: translateY(10px) scale(.97); border-radius: 38px; }
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+}
+@keyframes chart-in {
+  from { clip-path: inset(-8px 100% -8px -8px); }
+  to { clip-path: inset(-8px -8px -8px -8px); }
+}
+@keyframes selection-in {
+  from { scale: .86; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .number-reel-in { animation: reel-in 300ms var(--ease-out) var(--reel-delay) backwards; }
+  .number-reel-out {
+    display: block;
+    position: absolute;
+    inset: 0;
+    animation: reel-out 300ms var(--ease-out) var(--reel-delay) forwards;
+  }
+
+  .heading-copy, .page-view > .card, .page-view .bento > .card,
+  .page-view .dashboard-bottom > .card, .page-view .invoice-grid > .card,
+  .calendar-month, .month-grid tbody tr, .calendar-agenda, .line-item,
+  .form-error, .error-banner {
+    animation: content-in 260ms var(--ease-out) backwards;
+  }
+  .page-view .bento > :nth-child(2) { animation-delay: 24ms; }
+  .page-view .bento > :nth-child(3) { animation-delay: 42ms; }
+  .page-view .bento > :nth-child(4) { animation-delay: 60ms; }
+  .page-view .bento > :nth-child(5), .page-view .invoice-preview { animation-delay: 65ms; }
+  .page-view .dashboard-bottom > :first-child { animation-delay: 48ms; }
+  .page-view .dashboard-bottom > :last-child { animation-delay: 72ms; }
+  .chart-series { animation: chart-in 520ms var(--ease-out) 90ms backwards; }
+  .login-card, .modal[open], .action-form { animation: panel-in 300ms var(--ease-out); }
+  .modal[open]::backdrop { animation: backdrop-in 220ms ease-out; }
+  .rail-indicator { transition: translate 280ms var(--ease-out); }
+  .rail nav button::before { transition: background-color 170ms ease-out; }
+  .rail nav .selected svg, .done .step-icon svg { animation: selection-in 220ms var(--ease-out); }
+
+  .button, .rail button, .icon-button, .table-arrow, .avatar, .text-button,
+  .calendar-day, .status, .step-icon, .milestones li, .connection i {
+    transition: background-color 170ms ease-out, color 170ms ease-out, box-shadow 180ms ease-out,
+      border-radius 200ms var(--ease-out), scale 180ms var(--ease-out);
+  }
+  .button:active:not(:disabled), .rail button:active:not(:disabled),
+  .icon-button:active:not(:disabled), .table-arrow:active:not(:disabled),
+  .avatar:active, .text-button:active:not(:disabled) { scale: .95; }
+  .field :is(input, select, textarea), .search, .table-controls select {
+    transition: background-color 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out;
+  }
+  .field :is(input, select, textarea):focus { background-color: white; border-color: #c8b7ed; }
+  .search:focus-within { box-shadow: 0 0 0 2px #e2d9f5; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .prism, .brand-mark, .project-mark, .date-block, .text-button svg, .new-project svg,
+    .deadline-list button > svg, .agenda-row > svg {
+      transition: translate 240ms var(--ease-out), rotate 240ms var(--ease-out), border-radius 240ms var(--ease-out);
+    }
+    .profit-card:hover .prism { translate: 0 -4px; rotate: -3deg; }
+    .brand-button:hover .brand-mark, .project-link:hover .project-mark, .agenda-row:hover .project-mark,
+    .deadline-list button:hover .date-block { border-radius: 40%; rotate: -5deg; }
+    .text-button:hover svg, .deadline-list button:hover > svg, .agenda-row:hover > svg { translate: 2px -1px; }
+    .new-project:hover svg { rotate: 90deg; }
+    .projects-card tbody tr { transition: background-color 160ms ease-out; }
+    .projects-card tbody tr:hover { background-color: #faf8fd; }
+  }
+}
 
 @media (min-width: 1300px) {
   .topbar { padding: 0 30px; }
@@ -299,7 +383,6 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .projects-card, .deadlines-card { padding: 20px; }
 }
 @media (max-width: 1050px) {
-  .app-shell { width: calc(100% - 34px); margin: 17px auto; min-height: calc(100vh - 34px); }
   .connection { display: none; }
   .workspace-layout { grid-template-columns: 56px minmax(0, 1fr); }
   .main-content { padding-right: 16px; }
@@ -309,11 +392,9 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .projects-card, .deadlines-card { padding: 13px; }
 }
 @media (max-width: 810px) {
-  .app-shell { width: calc(100% - 22px); margin: 11px auto; min-height: calc(100vh - 22px); border-radius: 22px; border-width: 3px; }
   .topbar { flex-wrap: wrap; gap: 10px; min-height: 0; padding: 11px 13px; }
   .workspace-layout { grid-template-columns: 43px minmax(0, 1fr); }
-  .rail { padding: 17px 0 12px 3px; min-height: calc(100vh - 80px); }
-  .rail button { width: 34px; height: 36px; }
+  .rail { --rail-button-height: 36px; --rail-button-width: 34px; padding: 17px 0 12px 3px; min-height: calc(100vh - 80px); }
   .rail .rail-account { bottom: 14px; }
   .main-content { padding: 17px 12px 0 4px; }
   .dashboard-bottom { grid-template-columns: minmax(0, 1fr); }

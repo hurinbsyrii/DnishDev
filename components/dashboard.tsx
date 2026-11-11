@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, Clock3, FolderKanban, Search, Wallet } from "lucide-react";
 import { balance, daysBetween, deadline, formatDate, money, profitFor, projectStage, type Project } from "@/lib/projects";
+import { RollingMoney, RollingNumber } from "./rolling-number";
 import { ProjectMark, Status } from "./ui";
 
 function Prism() {
@@ -43,10 +44,12 @@ function ProfitChart({ projects, today }: { projects: Project[]; today: string }
     <svg viewBox="0 0 556 116" preserveAspectRatio="none" role="img" aria-label={months.map((monthKey, index) => `${formatDate(`${monthKey}-01`, { month: "long" })} ${money(values[index])}`).join(", ")}>
       <defs><linearGradient id={gradient} x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stopColor="#c9bdf1" stopOpacity=".62"/><stop offset="1" stopColor="#eee9fb" stopOpacity=".12"/></linearGradient></defs>
       {[24, 48, 72, 96].map((y) => <line key={y} x1="10" x2="546" y1={y} y2={y} stroke="#edeaf1" strokeDasharray="4 4"/>)}
-      <path d={`${line} L528,${zero} L28,${zero} Z`} fill={`url(#${gradient})`}/>
-      <path d={line} stroke="#8f7cdb" strokeWidth="2.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" fill="none"/>
-      {points.map(([x, y], index) => <circle key={x} cx={x} cy={y} r={index === 5 ? 5.5 : 3.5} fill={index === 5 ? "#dff38d" : "#fff"} stroke="#8f7cdb" strokeWidth="2"><title>{formatDate(`${months[index]}-01`, { month: "long" })} · {money(values[index])}</title></circle>)}
-      <line x1={last[0]} x2={last[0]} y1={last[1] + 8} y2="107" stroke="#c8bce9" strokeDasharray="3 4" />
+      <g className="chart-series">
+        <path d={`${line} L528,${zero} L28,${zero} Z`} fill={`url(#${gradient})`}/>
+        <path d={line} stroke="#8f7cdb" strokeWidth="2.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" fill="none"/>
+        {points.map(([x, y], index) => <circle key={x} cx={x} cy={y} r={index === 5 ? 5.5 : 3.5} fill={index === 5 ? "#dff38d" : "#fff"} stroke="#8f7cdb" strokeWidth="2"><title>{formatDate(`${months[index]}-01`, { month: "long" })} · {money(values[index])}</title></circle>)}
+        <line x1={last[0]} x2={last[0]} y1={last[1] + 8} y2="107" stroke="#c8bce9" strokeDasharray="3 4" />
+      </g>
     </svg>
     <div className="chart-labels">{months.map((monthKey, index) => <span key={monthKey} style={{ left: `${points[index][0] / 556 * 100}%` }}>{formatDate(`${monthKey}-01`, { month: "short" })}</span>)}</div>
   </div>;
@@ -97,23 +100,23 @@ export function Dashboard({ projects, today, onCalendar, onProjects, onProject, 
     <div className="bento">
       <section className="card profit-card">
         <div className="profit-top"><span className="metric-icon"><Wallet size={18} /></span><span className="eyebrow">WORKSPACE EARNINGS</span></div>
-        <div className="profit-value"><p>All-time profit</p><strong>{money(allTime)}</strong></div>
+        <div className="profit-value"><p>All-time profit</p><strong><RollingMoney cents={allTime} /></strong></div>
         <Prism />
         <div className="profit-footer"><span>Payments received − project costs</span><button className="icon-button" aria-label="View projects" onClick={onProjects}><ArrowUpRight size={17} /></button></div>
       </section>
       <section className="card metric-card monthly-card">
         <div className="metric-top"><span className="metric-icon green"><Wallet size={17} /></span><span className="period-tag">{formatDate(today, { month: "short" })}</span></div>
-        <div><p>Profit this month</p><strong>{money(monthly)}</strong></div>
+        <div><p>Profit this month</p><strong><RollingMoney cents={monthly} /></strong></div>
         <small>{monthly < 0 ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />} Net cash this month</small>
       </section>
       <section className="card metric-card outstanding-card">
         <div className="metric-top"><span className="metric-icon"><Clock3 size={17} /></span></div>
-        <div><p>Outstanding</p><strong>{money(outstanding)}</strong></div>
+        <div><p>Outstanding</p><strong><RollingMoney cents={outstanding} /></strong></div>
         <small>Across {projects.filter((project) => balance(project) > 0).length} unpaid projects</small>
       </section>
       <section className="card metric-card active-card">
         <div className="metric-top"><span className="metric-icon lavender"><FolderKanban size={17} /></span></div>
-        <div><p>Active projects</p><strong>{active.length.toString().padStart(2, "0")}</strong></div>
+        <div><p>Active projects</p><strong><RollingNumber value={active.length} padStart={2} /></strong></div>
         <small>{projects.length - active.length} delivered</small>
       </section>
       <section className="card chart-card">
