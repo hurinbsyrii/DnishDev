@@ -8,7 +8,7 @@ import { Modal } from "./ui";
 
 const lineItem = (description = "", rate = ""): LineItem => ({ id: crypto.randomUUID(), description, quantity: "1", rate });
 
-function newDraft(today: string, sender = "DnishDev", senderDetails = ""): InvoiceDraft {
+function newDraft(today: string, sender = "DevDash", senderDetails = ""): InvoiceDraft {
   return {
     number: invoiceNumber(today), issued: today, due: addDays(today, 14), sender, senderDetails,
     recipient: "", recipientDetails: "", paid: "0", notes: "", lines: [lineItem()],
@@ -20,7 +20,7 @@ function loadDraft(storageKey: string, today: string): InvoiceDraft {
     const raw = localStorage.getItem(storageKey);
     if (raw) {
       const saved = JSON.parse(raw) as InvoiceDraft;
-      return { ...saved, number: saved.number?.trim() || invoiceNumber(today) };
+      return { ...saved, sender: saved.sender === "DnishDev" ? "DevDash" : saved.sender, number: saved.number?.trim() || invoiceNumber(today) };
     }
   } catch {
     // The invoice editor still works if browser storage is unavailable.

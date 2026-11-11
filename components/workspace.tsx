@@ -22,7 +22,7 @@ type Page = typeof pages[number]["name"];
 type Dialog = { mode: "new" | "account" } | { mode: "details" | "edit"; id: string };
 
 function Brand() {
-  return <div className="brand"><span className="brand-mark"><Code2 size={21} strokeWidth={2.5} /></span><span>Dnish<span className="brand-dev">Dev</span><small>FREELANCE STUDIO</small></span></div>;
+  return <div className="brand"><span className="brand-mark"><Code2 size={21} strokeWidth={2.5} /></span><span>Dev<span className="brand-dev">Dash</span><small>FREELANCE STUDIO</small></span></div>;
 }
 
 function Login() {
@@ -45,7 +45,7 @@ function Login() {
 
   return <div className="login-screen"><div className="card login-card">
     <Brand />
-    <div><p className="eyebrow"><span /> PRIVATE WORKSPACE</p><h1>Welcome back</h1><p className="muted">Sign in to access your DnishDev projects.</p></div>
+    <div><p className="eyebrow"><span /> PRIVATE WORKSPACE</p><h1>Welcome back</h1><p className="muted">Sign in to access your DevDash projects.</p></div>
     <form onSubmit={signIn} className="form-grid">
       <label className="field full">Email<input type="email" name="email" autoComplete="username" required /></label>
       <label className="field full">Password<input type="password" name="password" autoComplete="current-password" required /></label>
@@ -107,7 +107,7 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
 
   return <div className="app-shell">
     <header className="topbar">
-      <button className="brand-button" aria-label="DnishDev overview" onClick={() => navigate("Overview")}><Brand /></button>
+      <button className="brand-button" aria-label="DevDash overview" onClick={() => navigate("Overview")}><Brand /></button>
       <div className="top-right"><span className="connection"><i className={live || !cloudConfigured ? "online" : ""} />{cloudConfigured ? live ? "Live sync" : "Cloud workspace" : "Demo workspace"}</span><button className="avatar" aria-label="Workspace account" onClick={() => { setAccountError(""); setDialog({ mode: "account" }); }}>{session?.user.email?.slice(0, 2).toUpperCase() || "DD"}</button></div>
     </header>
     <div className="workspace-layout">
@@ -155,7 +155,7 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
           {page === "Calendar" && <Calendar projects={sorted} today={today} onProject={open} />}
           {page === "Invoices" && <Invoice key={session?.user.id ?? "demo"} projects={sorted} today={today} owner={session?.user.id ?? "demo"} />}
         </>}
-        <footer className="workspace-footer"><span>DnishDev Workspace</span><span>MYR <i /> Asia/Kuala_Lumpur</span></footer>
+        <footer className="workspace-footer"><span>DevDash Workspace</span><span>MYR <i /> Asia/Kuala_Lumpur</span></footer>
       </main>
     </div>
     {dialog?.mode === "new" && <ProjectEditor project={null} today={today} categoryOptions={categories} onClose={close} save={mutate} />}

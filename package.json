@@ -1,5 +1,5 @@
 {
-  "name": "dnishdev",
+  "name": "devdash",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -7,9 +7,9 @@
   },
   "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--experimental-require-module next dev",
-    "build": "cross-env NODE_OPTIONS=--experimental-require-module next build",
-    "start": "cross-env NODE_OPTIONS=--experimental-require-module next start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "serve out",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
@@ -31,6 +31,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.0.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "serve": "^14.2.5"
   }
 }
