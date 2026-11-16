@@ -22,6 +22,7 @@ Open [localhost:3000](http://localhost:3000). The app starts in demo mode with s
 
 ## Workspace behavior
 
+- The **To-do** page is a Kanban board with **To do → In progress → Done** columns. Add, edit, delete, search, and filter tasks by priority; drag cards or use their status menus to move them. Tasks can have notes and optional due dates and times (MYT). Each column shows the 10 most recently added or moved tasks first; **See more** reveals 10 more at a time, and **Show fewer** returns to 10. Older tasks without timestamps use their saved creation order. Boards are saved in the current browser separately for each signed-in account (or demo workspace), and do not sync through Supabase.
 - Project milestones are **Project won → Deposit paid → Project complete → Paid in full → Published**. A project with no deposit can move straight to **Project complete**. **Published** records the handoff milestone in DevDash.
 - Profit is recorded cash received minus recorded project costs. The month is based on the actual payment and cost dates in Malaysia time. Each project tracks one deposit, one final payment, and one aggregated cost.
 - Projects with no end date appear on their start date in the calendar. Marking one complete sets its end date to the completion date. The calendar uses Monday-based ISO week numbers, and the deadline countdown uses Malaysia dates.
