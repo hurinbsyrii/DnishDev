@@ -65,6 +65,7 @@ export function TodoBoard({ owner, today }: { owner: string; today: string }) {
     try {
       const next = update(readTasks(storageKey));
       localStorage.setItem(storageKey, JSON.stringify(next));
+      window.dispatchEvent(new Event("devdash-tasks-changed"));
       setSnapshot({ tasks: next, error: "" });
       setAnnouncement(message);
       return true;

@@ -486,7 +486,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   }
   .rail nav {
     position: static;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     justify-items: stretch;
     gap: 4px;
   }
@@ -550,4 +550,41 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .table-controls { gap: 4px; }
   .search input { width: 90px; }
   .table-controls select { max-width: 126px; }
+}
+
+.reminders-page { display: grid; gap: 16px; }
+.reminder-list { padding: 20px; }
+.reminder-list .card-heading { margin-bottom: 18px; }
+.reminder-toolbar-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.reminder-delivery { display: grid; gap: 12px; padding: 16px; margin-top: 20px; border-radius: 16px; background: #f1edfa; }
+.reminder-delivery h3 { font-size: 14px; font-weight: 800; }
+.reminder-delivery-status { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; }
+.reminder-frequency { min-width: 0; margin: 0; padding: 0; border: 0; }
+.reminder-frequency legend { margin-bottom: 8px; font-size: 12px; font-weight: 750; }
+.reminder-frequency-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.reminder-frequency-option { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 12px; border: 1px solid #e5e1ed; border-radius: 12px; background: #f8f7fb; font-size: 12px; font-weight: 700; cursor: pointer; }
+.reminder-frequency-option:hover { background: #eee8fa; }
+.reminder-frequency-option:has(input:checked) { border-color: #8f7cdb; background: #eee8fa; color: #4c3881; }
+.reminder-frequency-option input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: #6952c4; }
+.reminder-check { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 750; }
+.reminder-check input { width: 17px; height: 17px; accent-color: #6952c4; }
+.reminder-banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 12px 16px; border: 1px solid #ddd3f2; border-radius: 16px; background: #eee8fa; }
+.reminder-banner > span { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 750; }
+.reminder-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
+.reminder-row.needs-attention > .metric-icon { color: #70509c; background: #eee5fb; }
+.reminder-row-copy { flex: 1; min-width: 0; }
+.reminder-row-copy strong, .reminder-title { display: block; font-size: 14px; font-weight: 800; text-align: left; overflow-wrap: anywhere; }
+.reminder-title:hover { color: #6952c4; }
+.reminder-source { display: block; margin-bottom: 4px; color: #70598f; font-size: 10px; font-weight: 800; }
+.reminder-row-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.reminder-message { color: #52662c; font-size: 12px; }
+.reminder-message:empty { display: none; }
+@media (max-width: 810px) {
+  .rail nav button { font-size: 9px; }
+}
+@media (max-width: 610px) {
+  .reminder-list { padding: 15px; }
+  .reminder-list .card-heading { flex-wrap: wrap; }
+  .reminder-row { flex-wrap: wrap; }
+  .reminder-row-actions { margin-left: auto; }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import Image from "next/image";
-import { ArrowRight, CalendarDays, ChevronRight, Columns3, FileText, FolderKanban, LayoutGrid, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, Bell, CalendarDays, ChevronRight, Columns3, FileText, FolderKanban, LayoutGrid, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { categories as projectCategories, formatDate, todayInMalaysia, type Project } from "@/lib/projects";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
 import { useProjects } from "@/lib/use-projects";
@@ -12,12 +12,14 @@ import { Invoice } from "./invoice";
 import { ProjectDetails, ProjectEditor } from "./project-editor";
 import { Modal } from "./ui";
 import { TodoBoard } from "./todo-board";
+import { Reminders } from "./reminders";
 
 const pages = [
   { name: "Overview", icon: LayoutGrid, title: "Workspace overview", description: "Track projects, upcoming deadlines and what you’ve earned." },
   { name: "Projects", icon: FolderKanban, title: "Your projects", description: "Manage clients, payments and every milestone from won to published." },
   { name: "To-do", icon: Columns3, title: "Your to-do board", description: "Make a plan, focus on what’s next and keep work moving." },
   { name: "Calendar", icon: CalendarDays, title: "Project calendar", description: "See your project schedule by day and ISO week." },
+  { name: "Reminders", icon: Bell, title: "Your reminders", description: "Choose when to get a nudge, how often it repeats and what to remember." },
   { name: "Invoices", icon: FileText, title: "Create an invoice", description: "Fill in your company details, adjust the rates and download a PDF." },
 ] as const;
 
@@ -162,10 +164,11 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
           <div className="heading-copy" key={page}><p className="eyebrow"><span /> YOUR FREELANCE STUDIO</p><h1>{current.title}</h1><p className="page-description">{current.description}</p></div>
           <div className="heading-actions">
             <span className="date-pill"><CalendarDays size={16} /> {formatDate(today, { day: "numeric", month: "short", year: "numeric" })}</span>
-            {page !== "Invoices" && page !== "To-do" && <button className="button primary new-project" onClick={() => setDialog({ mode: "new" })}><Plus size={18} /> New project</button>}
+            {page !== "Invoices" && page !== "To-do" && page !== "Reminders" && <button className="button primary new-project" onClick={() => setDialog({ mode: "new" })}><Plus size={18} /> New project</button>}
           </div>
         </div>
         {loadError && <div className="error-banner" role="alert">{loadError}<button className="button quiet" onClick={retry}>Retry</button></div>}
+        <Reminders key={session?.user.id ?? "demo"} owner={session?.user.id ?? "demo"} projects={sorted} active={page === "Reminders"} today={today} onOpen={open} onTasks={() => navigate("To-do")} onReminders={() => navigate("Reminders")} />
         {loading ? <div className="card empty" role="status">Loading projects…</div> :
           <div className="page-view" key={page}>
             {page === "Overview" && <Dashboard projects={sorted} today={today} onCalendar={() => navigate("Calendar")} onProjects={() => navigate("Projects")} onProject={open} list={renderList()} />}
