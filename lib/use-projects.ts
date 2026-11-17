@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { demoProjects, type Project, type ProjectChange } from "./projects";
+import { demoProjects, newProject, paymentChange, todayInMalaysia, type Project, type ProjectChange } from "./projects";
 import { cloudConfigured, getSupabase } from "./supabase";
 
 const storageKey = "dnishdev-projects-v1";
@@ -105,6 +105,7 @@ export function useProjects(initialDay: string) {
   }, [initialDay, reload, userId]);
 
   const mutate = useCallback(async (project: Project | null, change: ProjectChange | null) => {
+    if (change) change = paymentChange(project ?? { ...newProject(initialDay), id: "", version: 0 }, change, todayInMalaysia());
     const client = getSupabase();
     const conflict = "This project changed in another tab. Reopen it to see the latest version.";
     if (client && userId) {

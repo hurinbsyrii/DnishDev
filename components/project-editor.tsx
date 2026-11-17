@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Check, Clock3, Pencil, Trash2 } from "lucide-react";
-import { balance, deadline, formatDate, money, newProject, stages, toCents, type Project, type ProjectChange } from "@/lib/projects";
+import { additionalPayments, amountPaid, balance, deadline, formatDate, money, newProject, paymentHistory, stages, toCents, type Project, type ProjectChange } from "@/lib/projects";
 import { Modal, ProjectMark, Status } from "./ui";
 
 export type SaveProject = (project: Project | null, change: ProjectChange | null) => Promise<void>;
@@ -31,7 +31,6 @@ export function ProjectEditor({ project: initialProject, today, categoryOptions,
     if (deposit > 0 && !depositDate) return setError("Enter the date the deposit was received.");
     if (cost > 0 && !costDate) return setError("Enter the date the costs were paid.");
     if (endDate && startDate > endDate) return setError("The end date must be on or after the start date.");
-    if (deposit > 0 && project?.paid_date && depositDate > project.paid_date) return setError("The deposit date can’t be after the final payment date.");
     setBusy(true);
     setError("");
     try {
@@ -62,7 +61,7 @@ export function ProjectEditor({ project: initialProject, today, categoryOptions,
       <label className="field">End date (optional)<input name="end_date" type="date" defaultValue={data.end_date ?? ""} /></label>
       <label className="field">Full price (RM)<input name="price" type="number" min="0" max="9999999.99" step="0.01" defaultValue={data.price_cents ? data.price_cents / 100 : ""} placeholder="0.00" required /></label>
       <label className="field">Deposit received (RM)<input name="deposit" type="number" min="0" max="9999999.99" step="0.01" defaultValue={data.deposit_cents ? data.deposit_cents / 100 : ""} placeholder="0.00" /></label>
-      <label className="field">Deposit received on<input name="deposit_date" type="date" defaultValue={data.deposit_date ?? today} max={project?.paid_date ?? today} /></label>
+      <label className="field">Deposit received on<input name="deposit_date" type="date" defaultValue={data.deposit_date ?? today} max={today} /></label>
       <label className="field">Project costs (RM)<input name="cost" type="number" min="0" max="9999999.99" step="0.01" defaultValue={data.cost_cents ? data.cost_cents / 100 : ""} placeholder="0.00" /></label>
       <label className="field">Costs paid on<input name="cost_date" type="date" defaultValue={data.cost_date ?? today} max={today} /></label>
       {error && <p className="form-error full" role="alert">{error}</p>}
@@ -74,17 +73,15 @@ export function ProjectEditor({ project: initialProject, today, categoryOptions,
 export function ProjectDetails({ project, today, onClose, onEdit, save }: {
   project: Project; today: string; onClose: () => void; onEdit: () => void; save: SaveProject;
 }) {
-  const [mode, setMode] = useState<"deposit" | "complete" | "paid" | "publish" | "delete" | null>(null);
+  const [mode, setMode] = useState<"payment" | "complete" | "paid" | "publish" | "delete" | null>(null);
   const [actionProject, setActionProject] = useState(project);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const dates = [project.start_date, project.deposit_date, project.completed_date, project.paid_date, project.published_date];
-  const nextMode = project.paid_date ? "publish" : project.completed_date ? "paid" : project.deposit_date ? "complete" : "deposit";
-  const actions = { deposit: "Record deposit", complete: "Mark project complete", paid: "Record full payment", publish: "Mark published", delete: "Delete project" };
-  const minimum = mode === "paid"
-    ? [actionProject.completed_date ?? "", actionProject.deposit_date ?? ""].sort().at(-1)
-    : mode === "complete" && !actionProject.end_date ? actionProject.start_date
-    : mode === "publish" ? actionProject.paid_date ?? undefined : undefined;
+  const dates = [project.start_date, paymentHistory(project)[0]?.date, project.completed_date, project.paid_date, project.published_date];
+  const nextMode = !project.completed_date ? "complete" : !project.paid_date ? "paid" : "publish";
+  const actions = { payment: "Record payment", complete: "Mark project complete", paid: "Record full payment", publish: "Mark published", delete: "Delete project" };
+  const minimum = mode === "complete" && !actionProject.end_date ? actionProject.start_date
+    : mode === "publish" ? [actionProject.paid_date ?? "", actionProject.completed_date ?? ""].sort().at(-1) : undefined;
 
   function choose(next: typeof mode) {
     setError("");
@@ -97,13 +94,12 @@ export function ProjectDetails({ project, today, onClose, onEdit, save }: {
     const form = new FormData(event.currentTarget);
     const date = String(form.get("date") ?? "");
     let change: ProjectChange | null = null;
-    if (mode === "deposit") {
-      const cents = toCents(form.get("amount"));
-      if (cents <= 0 || cents > actionProject.price_cents) return setError("Enter a deposit between RM0.01 and the full price.");
-      change = { deposit_cents: cents, deposit_date: date };
+    if (mode === "payment" || mode === "paid") {
+      const cents = mode === "paid" ? balance(actionProject) : toCents(form.get("amount"));
+      if (!Number.isInteger(cents) || cents < 0 || (cents === 0 && actionProject.price_cents !== 0) || cents > balance(actionProject)) return setError("Enter an amount between RM0.01 and the remaining balance.");
+      change = cents === 0 ? { paid_date: date } : { payments: [...additionalPayments(actionProject), { id: crypto.randomUUID(), amount_cents: cents, date }] };
     }
     if (mode === "complete") change = { completed_date: date, end_date: actionProject.end_date ?? date };
-    if (mode === "paid") change = { paid_date: date };
     if (mode === "publish") change = { published_date: date };
     setBusy(true);
     setError("");
@@ -122,19 +118,27 @@ export function ProjectDetails({ project, today, onClose, onEdit, save }: {
     <div className="detail-summary"><ProjectMark project={project} /><Status project={project} /><span className="muted detail-due"><Clock3 size={15} />{deadline(project, today)}</span></div>
     <div className="detail-money">
       <div><span>Full price</span><strong>{money(project.price_cents)}</strong></div>
-      <div><span>Deposit</span><strong>{money(project.deposit_cents)}</strong></div>
+      <div><span>Total paid</span><strong>{money(amountPaid(project))}</strong></div>
       <div><span>Remaining</span><strong>{money(balance(project))}</strong></div>
     </div>
     <p className="detail-dates">{formatDate(project.start_date, { day: "numeric", month: "short", year: "numeric" })} – {project.end_date ? formatDate(project.end_date, { day: "numeric", month: "short", year: "numeric" }) : "No end date"}</p>
+    <section className="payment-history" aria-label="Payment history">
+      <h3>Payment history</h3>
+      {paymentHistory(project).length ? <ul>{paymentHistory(project).map((payment) => <li key={payment.id}>
+        <span>{payment.id === "deposit" ? "Deposit" : "Payment"}<small>{formatDate(payment.date, { day: "numeric", month: "short", year: "numeric" })}</small></span>
+        <strong>{money(payment.amount_cents)}</strong>
+      </li>)}</ul> : <p className="muted">No payments recorded yet.</p>}
+    </section>
     <ol className="milestones">{stages.map((stage, index) => {
       const done = index === 0 || Boolean(dates[index]);
-      return <li key={stage} className={done ? "done" : ""}><span className="step-icon">{done ? <Check size={13} /> : index + 1}</span><span>{stage}</span>{index > 0 && dates[index] && <small>{formatDate(dates[index])}</small>}{index === 1 && !done && project.completed_date && <small>No deposit</small>}</li>;
+      return <li key={stage} className={done ? "done" : ""}><span className="step-icon">{done ? <Check size={13} /> : index + 1}</span><span>{stage}</span>{index > 0 && dates[index] && <small>{formatDate(dates[index])}</small>}</li>;
     })}</ol>
     {mode ? <form className="form-grid action-form" onSubmit={submit} key={mode}>
       <strong className="full">{actions[mode]}</strong>
       {mode === "delete" ? <p className="muted full">This removes the project and its payment and cost records from your totals.</p> : <>
-        {mode === "deposit" && <label className="field">Amount (RM)<input name="amount" type="number" step="0.01" min="0.01" max={actionProject.price_cents / 100} required autoFocus /></label>}
+        {mode === "payment" && <label className="field">Amount received (RM)<input name="amount" type="number" step="0.01" min="0.01" max={balance(actionProject) / 100} required autoFocus /></label>}
         <label className="field">Date<input type="date" name="date" defaultValue={today} min={minimum} max={today} required /></label>
+        {mode === "payment" && <p className="muted full">Remaining balance · {money(balance(actionProject))}. Record any amount, including the full balance.</p>}
         {mode === "complete" && !actionProject.end_date && <p className="muted full">This date will also be saved as the project’s end date.</p>}
         {mode === "paid" && <p className="muted full">Final amount received · {money(balance(actionProject))}</p>}
       </>}
@@ -144,8 +148,8 @@ export function ProjectDetails({ project, today, onClose, onEdit, save }: {
       <button type="button" className="icon-button delete-button" title="Delete project" aria-label="Delete project" onClick={() => choose("delete")}><Trash2 size={16} /></button>
       <button type="button" className="button quiet" onClick={onEdit}><Pencil size={15} /> Edit</button>
       {!project.published_date && <>
-        {nextMode === "deposit" && <button type="button" className="button quiet" onClick={() => choose("complete")}>Mark complete</button>}
-        {(nextMode !== "deposit" || project.price_cents > 0) && <button type="button" className="button primary" onClick={() => choose(nextMode)}>{actions[nextMode]} <ArrowRight size={15} /></button>}
+        {balance(project) > 0 && <button type="button" className="button primary" onClick={() => choose("payment")}>Record payment</button>}
+        <button type="button" className={`button ${balance(project) > 0 ? "quiet" : "primary"}`} onClick={() => choose(nextMode)}>{actions[nextMode]} <ArrowRight size={15} /></button>
       </>}
     </div>}
   </Modal>;
