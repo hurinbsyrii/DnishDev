@@ -35,6 +35,9 @@ small { font-size: 12px; }
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
 }
 .topbar { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 23px; border-bottom: 1px solid #e9e7ef; }
@@ -64,8 +67,8 @@ small { font-size: 12px; }
 .avatar { width: 37px; height: 37px; border-radius: 50%; background: #dfd5f8; font-size: 11px; font-weight: 850; color: #4d3c77; border: 2px solid white; }
 .avatar:hover { background: #d4c5f6; }
 
-.workspace-layout { display: grid; grid-template-columns: 69px minmax(0, 1fr); }
-.rail { --rail-button-height: 39px; --rail-button-width: 39px; --rail-gap: 9px; display: flex; align-items: center; justify-content: space-between; flex-direction: column; padding: 32px 0 28px 5px; min-height: calc(100vh - 140px); }
+.workspace-layout { flex: 1; display: grid; grid-template-columns: 69px minmax(0, 1fr); }
+.rail { --rail-button-height: 39px; --rail-button-width: 39px; --rail-gap: 9px; display: flex; align-items: center; justify-content: space-between; flex-direction: column; padding: 32px 0 28px 5px; }
 .rail nav { position: sticky; top: 14px; display: grid; gap: var(--rail-gap); justify-items: center; isolation: isolate; }
 .rail button, .icon-button, .table-arrow { display: inline-grid; place-items: center; flex: none; width: 37px; height: 37px; background: #f0eff3; border-radius: 50%; color: #524f5c; }
 .rail button { width: var(--rail-button-width); height: var(--rail-button-height); background: #ecebf1; }
@@ -78,7 +81,8 @@ small { font-size: 12px; }
 .rail .rail-account { position: sticky; bottom: 24px; margin-top: auto; }
 .rail-label { display: none; }
 .icon-button:hover, .table-arrow:hover { background: #e8e1f5; color: #302747; }
-.main-content { min-width: 0; padding: 25px 23px 0 9px; }
+.main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 25px 23px 0 9px; }
+.workspace-footer { margin-top: auto; }
 .breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #6f6b79; font-weight: 700; }
 .breadcrumb span { color: #3e3a48; }
 .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 20px 0 25px; }
@@ -473,7 +477,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
     scroll-padding-bottom: calc(var(--bottom-nav-height) + var(--bottom-nav-inset));
   }
   .topbar { flex-wrap: wrap; gap: 10px; min-height: 0; padding: 11px 13px; }
-  .workspace-layout { display: block; }
+  .workspace-layout { display: flex; flex-direction: column; }
   .rail {
     position: fixed;
     inset: auto 0 0;
@@ -568,8 +572,26 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 .reminder-frequency-option input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: #6952c4; }
 .reminder-check { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 750; }
 .reminder-check input { width: 17px; height: 17px; accent-color: #6952c4; }
-.reminder-banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 12px 16px; border: 1px solid #ddd3f2; border-radius: 16px; background: #eee8fa; }
-.reminder-banner > span { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 750; }
+.reminder-fab { position: fixed; z-index: 40; right: max(20px, env(safe-area-inset-right)); bottom: calc(20px + var(--bottom-nav-height, 0px) + var(--bottom-nav-inset, 0px)); width: 52px; overflow: hidden; border: 1px solid #ddd3f2; border-radius: 26px; background: #eee8fa; box-shadow: 0 8px 24px rgba(60, 40, 110, .18); transition: width .4s var(--ease-out), border-radius .4s var(--ease-out), box-shadow .3s; }
+.reminder-fab.open { width: min(320px, calc(100vw - 40px)); border-radius: 20px; }
+.reminder-fab-toggle { display: flex; align-items: center; gap: 10px; width: 100%; height: 50px; padding: 0 15px; color: #4b3a7a; font-size: 13px; font-weight: 800; white-space: nowrap; }
+.reminder-fab-icon { position: relative; display: grid; place-items: center; flex: none; width: 20px; height: 20px; }
+.reminder-fab-badge { position: absolute; top: -9px; right: -10px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #6952c4; color: #fff; font-size: 10px; font-style: normal; line-height: 17px; text-align: center; }
+.reminder-fab-title { flex: 1; text-align: left; opacity: 0; transition: opacity .2s; }
+.reminder-fab-title small { margin-left: 8px; color: #70598f; font-size: 11px; font-weight: 700; }
+.reminder-fab-close { flex: none; opacity: 0; transition: opacity .2s; }
+.reminder-fab.open .reminder-fab-title, .reminder-fab.open .reminder-fab-close { opacity: 1; transition-delay: .12s; }
+.reminder-fab-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .4s var(--ease-out); }
+.reminder-fab.open .reminder-fab-body { grid-template-rows: 1fr; }
+.reminder-fab-inner { min-height: 0; overflow: hidden; padding: 0 15px; opacity: 0; transition: opacity .2s; }
+.reminder-fab.open .reminder-fab-inner { padding-bottom: 14px; opacity: 1; transition-delay: .12s; }
+.reminder-fab-inner ul { display: grid; gap: 10px; margin: 0 0 10px; padding: 0; list-style: none; }
+.reminder-fab-inner li { padding-top: 10px; border-top: 1px solid #ddd3f2; }
+.reminder-fab-inner li strong { display: block; font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.reminder-fab-inner li small { font-size: 11px; }
+.reminder-fab-inner > p { margin: 4px 0 10px; font-size: 12px; }
+.reminder-fab-inner .button { width: 100%; justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .reminder-fab, .reminder-fab-body, .reminder-fab-inner, .reminder-fab-title, .reminder-fab-close { transition: none; } }
 .reminder-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
 .reminder-row.needs-attention > .metric-icon { color: #70509c; background: #eee5fb; }
 .reminder-row-copy { flex: 1; min-width: 0; }

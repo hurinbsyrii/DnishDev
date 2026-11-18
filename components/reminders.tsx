@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
-import { ArrowUpRight, Bell, BellRing, Check, Plus, Trash2 } from "lucide-react";
+import { ArrowUpRight, Bell, BellRing, Check, Plus, Trash2, X } from "lucide-react";
 import { formatDate, type Project } from "@/lib/projects";
 import { emptyReminderData, parseReminderData, reminderSchedule, taskReminderItems, validSettings, type CustomReminder, type ReminderData, type ReminderItem, type ReminderSettings } from "@/lib/reminders";
 import { Modal } from "./ui";
@@ -93,6 +93,7 @@ export function Reminders({ owner, projects, tasks, taskError, active, today, on
   const [deleting, setDeleting] = useState<CustomReminder | null>(null);
   const [customizePreferences, setCustomizePreferences] = useState(false);
   const [message, setMessage] = useState("");
+  const [peek, setPeek] = useState(false);
   const [permission, setPermission] = useState(() => typeof Notification === "undefined" ? "unsupported" : Notification.permission);
   const [notificationError, setNotificationError] = useState("");
   const { data, error } = snapshot;
@@ -168,7 +169,20 @@ export function Reminders({ owner, projects, tasks, taskError, active, today, on
     else { const custom = data.custom.find((custom) => `custom-${custom.id}` === item.id); if (custom) setEditor({ item: custom }); }
   }
 
-  if (!active) return due.length ? <div className="reminder-banner" role="status"><span><BellRing size={17} />{due.length} {due.length === 1 ? "reminder needs" : "reminders need"} your attention</span><button className="button quiet" onClick={onReminders}>View reminders <ArrowUpRight size={15} /></button></div> : null;
+  if (!active) return <div className={`reminder-fab ${peek ? "open" : ""}`}>
+    <button className="reminder-fab-toggle" aria-expanded={peek} aria-controls="reminder-peek" aria-label={peek ? "Close reminders" : `Reminders, ${due.length} due`} onClick={() => setPeek(!peek)} onKeyDown={(event) => { if (event.key === "Escape") setPeek(false); }}>
+      <span className="reminder-fab-icon">{due.length ? <BellRing size={20} /> : <Bell size={20} />}{due.length > 0 && !peek && <i className="reminder-fab-badge">{due.length > 9 ? "9+" : due.length}</i>}</span>
+      <span className="reminder-fab-title">Reminders{due.length > 0 && <small>{due.length} due</small>}</span>
+      <X className="reminder-fab-close" size={16} />
+    </button>
+    <div className="reminder-fab-body" id="reminder-peek" role="region" aria-label="Due reminders" inert={!peek}>
+      <div className="reminder-fab-inner">
+        {due.length ? <ul>{due.slice(0, 4).map(({ item, schedule }) => <li key={item.id}><span className="reminder-source">{item.source}</span><strong>{item.title}</strong><small className="muted">Due {dateTime(schedule!.dueAt)}</small></li>)}</ul> : <p className="muted">You’re all caught up.</p>}
+        {due.length > 4 && <p className="muted reminder-fab-more">+{due.length - 4} more</p>}
+        <button className="button quiet" onClick={() => { setPeek(false); onReminders(); }}>View all reminders <ArrowUpRight size={15} /></button>
+      </div>
+    </div>
+  </div>;
 
   return <div className="reminders-page">
     {(error || taskError || notificationError) && <p className="error-banner" role="alert">{error || taskError || notificationError}</p>}
