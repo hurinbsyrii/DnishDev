@@ -5,6 +5,7 @@ import { ArrowUpRight, Bell, BellRing, Check, Plus, Trash2 } from "lucide-react"
 import { formatDate, type Project } from "@/lib/projects";
 import { emptyReminderData, parseReminderData, reminderSchedule, taskReminderItems, validSettings, type CustomReminder, type ReminderData, type ReminderItem, type ReminderSettings } from "@/lib/reminders";
 import { Modal } from "./ui";
+import type { Task } from "@/lib/tasks";
 
 const dateTime = (stamp: number) => new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(stamp);
 
@@ -81,16 +82,11 @@ function ReminderEditor({ item, defaults, today, close, save }: { item: CustomRe
   </Modal>;
 }
 
-export function Reminders({ owner, projects, active, today, onOpen, onTasks, onReminders }: { owner: string; projects: Project[]; active: boolean; today: string; onOpen: (project: Project) => void; onTasks: () => void; onReminders: () => void }) {
+export function Reminders({ owner, projects, tasks, taskError, active, today, onOpen, onTasks, onReminders }: { owner: string; projects: Project[]; tasks: Task[]; taskError: string; active: boolean; today: string; onOpen: (project: Project) => void; onTasks: () => void; onReminders: () => void }) {
   const storageKey = `devdash-reminders-v1-${owner}`;
-  const taskKey = `devdash-tasks-v1-${owner}`;
   const [snapshot, setSnapshot] = useState(() => {
     try { return { data: parseReminderData(localStorage.getItem(storageKey)), error: "" }; }
     catch { return { data: emptyReminderData(), error: "Couldn’t load reminders. Your saved data is kept. Check browser storage and reload." }; }
-  });
-  const [taskSnapshot, setTaskSnapshot] = useState(() => {
-    try { return { items: taskReminderItems(localStorage.getItem(taskKey)), error: "" }; }
-    catch { return { items: [] as ReminderItem[], error: "Couldn’t read to-do deadlines. Check the To-do tab." }; }
   });
   const [now, setNow] = useState(() => Date.now());
   const [editor, setEditor] = useState<{ item: CustomReminder | null } | null>(null);
@@ -102,9 +98,9 @@ export function Reminders({ owner, projects, active, today, onOpen, onTasks, onR
   const { data, error } = snapshot;
   const items = useMemo<ReminderItem[]>(() => [
     ...projects.flatMap((project) => project.end_date && !project.completed_date ? [{ id: `project-${project.id}`, title: project.name, date: project.end_date, source: "Project" as const, projectId: project.id }] : []),
-    ...taskSnapshot.items,
+    ...taskReminderItems(JSON.stringify(tasks)),
     ...data.custom.filter((item) => !item.completed).map((item) => ({ ...item, id: `custom-${item.id}`, source: "Custom" as const })),
-  ], [projects, taskSnapshot.items, data.custom]);
+  ], [projects, tasks, data.custom]);
   const scheduled = items.map((item) => ({ item, schedule: reminderSchedule(item, data.settings, now) }))
     .filter((entry) => entry.schedule !== null).sort((a, b) => a.schedule!.dueAt - b.schedule!.dueAt);
   const due = scheduled.filter(({ schedule }) => schedule!.currentAt !== null && (data.acknowledged[schedule!.key] ?? -1) < schedule!.currentAt!);
@@ -113,17 +109,14 @@ export function Reminders({ owner, projects, active, today, onOpen, onTasks, onR
     function sync() {
       try { setSnapshot({ data: parseReminderData(localStorage.getItem(storageKey)), error: "" }); }
       catch { setSnapshot((previous) => ({ ...previous, error: "Couldn’t refresh reminders. Your saved data has been kept." })); }
-      try { setTaskSnapshot({ items: taskReminderItems(localStorage.getItem(taskKey)), error: "" }); }
-      catch { setTaskSnapshot((previous) => ({ ...previous, error: "Couldn’t refresh to-do deadlines. Check the To-do tab." })); }
       setNow(Date.now());
       setPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
     }
     const timer = setInterval(sync, 15_000);
     window.addEventListener("storage", sync);
-    window.addEventListener("devdash-tasks-changed", sync);
     document.addEventListener("visibilitychange", sync);
-    return () => { clearInterval(timer); window.removeEventListener("storage", sync); window.removeEventListener("devdash-tasks-changed", sync); document.removeEventListener("visibilitychange", sync); };
-  }, [storageKey, taskKey]);
+    return () => { clearInterval(timer); window.removeEventListener("storage", sync); document.removeEventListener("visibilitychange", sync); };
+  }, [storageKey]);
 
   useEffect(() => {
     if (permission !== "granted" || error) return;
@@ -178,7 +171,7 @@ export function Reminders({ owner, projects, active, today, onOpen, onTasks, onR
   if (!active) return due.length ? <div className="reminder-banner" role="status"><span><BellRing size={17} />{due.length} {due.length === 1 ? "reminder needs" : "reminders need"} your attention</span><button className="button quiet" onClick={onReminders}>View reminders <ArrowUpRight size={15} /></button></div> : null;
 
   return <div className="reminders-page">
-    {(error || taskSnapshot.error || notificationError) && <p className="error-banner" role="alert">{error || taskSnapshot.error || notificationError}</p>}
+    {(error || taskError || notificationError) && <p className="error-banner" role="alert">{error || taskError || notificationError}</p>}
     <p className="reminder-message" role="status">{message}</p>
     <section className="card reminder-list" aria-labelledby="reminder-list-heading">
       <div className="card-heading"><div><h2 id="reminder-list-heading">Reminders <span className="period-tag">{due.length} need attention</span></h2><p className="muted">Project deadlines, to-do due dates and your own follow-ups.</p></div><div className="reminder-toolbar-actions"><button className="button quiet" aria-haspopup="dialog" onClick={() => setCustomizePreferences(true)}>Customize</button><button className="button primary" onClick={() => setEditor({ item: null })}><Plus size={16} />New reminder</button></div></div>

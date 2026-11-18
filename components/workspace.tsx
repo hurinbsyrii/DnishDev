@@ -6,6 +6,7 @@ import { ArrowRight, Bell, CalendarDays, ChevronRight, Columns3, FileText, Folde
 import { categories as projectCategories, formatDate, todayInMalaysia, type Project } from "@/lib/projects";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
 import { useProjects } from "@/lib/use-projects";
+import { useTasks } from "@/lib/use-tasks";
 import { Calendar } from "./calendar";
 import { Dashboard, ProjectList } from "./dashboard";
 import { Invoice } from "./invoice";
@@ -68,6 +69,7 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
   const [category, setCategory] = useState("");
   const [accountError, setAccountError] = useState("");
   const { session, authReady, live, projects, loading, loadError, retry, mutate } = useProjects(initialDay);
+  const board = useTasks(cloudConfigured ? session?.user.id ?? null : "demo");
   const sorted = [...projects].sort((a, b) => {
     return Number(Boolean(a.completed_date)) - Number(Boolean(b.completed_date))
       || Number(!a.end_date) - Number(!b.end_date)
@@ -168,12 +170,12 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
           </div>
         </div>
         {loadError && <div className="error-banner" role="alert">{loadError}<button className="button quiet" onClick={retry}>Retry</button></div>}
-        <Reminders key={session?.user.id ?? "demo"} owner={session?.user.id ?? "demo"} projects={sorted} active={page === "Reminders"} today={today} onOpen={open} onTasks={() => navigate("To-do")} onReminders={() => navigate("Reminders")} />
+        <Reminders key={session?.user.id ?? "demo"} owner={session?.user.id ?? "demo"} tasks={board.tasks} taskError={board.error} projects={sorted} active={page === "Reminders"} today={today} onOpen={open} onTasks={() => navigate("To-do")} onReminders={() => navigate("Reminders")} />
         {loading ? <div className="card empty" role="status">Loading projects…</div> :
           <div className="page-view" key={page}>
             {page === "Overview" && <Dashboard projects={sorted} today={today} onCalendar={() => navigate("Calendar")} onProjects={() => navigate("Projects")} onProject={open} list={renderList()} />}
             {page === "Projects" && renderList()}
-            {page === "To-do" && <TodoBoard key={session?.user.id ?? "demo"} owner={session?.user.id ?? "demo"} today={today} />}
+            {page === "To-do" && <TodoBoard key={session?.user.id ?? "demo"} board={board} today={today} />}
             {page === "Calendar" && <Calendar projects={sorted} today={today} onProject={open} />}
             {page === "Invoices" && <Invoice key={session?.user.id ?? "demo"} projects={sorted} today={today} owner={session?.user.id ?? "demo"} />}
           </div>}
