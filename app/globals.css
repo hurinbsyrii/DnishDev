@@ -80,6 +80,7 @@ small { font-size: 12px; }
 .rail-indicator { position: absolute; inset: 0 0 auto; z-index: -1; height: var(--rail-button-height); background: #24232a; border-radius: 32%; pointer-events: none; translate: 0 calc(var(--active-page) * (var(--rail-button-height) + var(--rail-gap))); }
 .rail .rail-account { position: sticky; bottom: 24px; margin-top: auto; }
 .rail-label { display: none; }
+.rail nav .mobile-more, .more-sheet, .more-backdrop { display: none; }
 .icon-button:hover, .table-arrow:hover { background: #e8e1f5; color: #302747; }
 .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 25px 23px 0 9px; }
 .workspace-footer { margin-top: auto; }
@@ -490,8 +491,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   }
   .rail nav {
     position: static;
-    grid-template-columns: repeat(7, minmax(54px, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     justify-items: stretch;
     gap: 4px;
   }
@@ -510,6 +510,47 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .rail nav button::before, .rail-indicator, .rail .rail-account { display: none; }
   .rail nav .selected, .rail nav .selected:hover { background: var(--lavender); color: #403365; }
   .rail-label { display: block; }
+  .rail nav .mobile-secondary { display: none; }
+  .rail nav .mobile-more { display: flex; }
+  .more-backdrop { display: block; position: fixed; inset: 0 0 calc(var(--bottom-nav-height) + var(--bottom-nav-inset)); z-index: 50; background: #29243c55; backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .3s var(--ease-out); }
+  .more-backdrop.open { opacity: 1; pointer-events: auto; }
+  /* Morph: the sheet runs down behind the bottom bar. Closed, it is clipped to exactly the bar's footprint
+     (hidden under the bar); open, its top edge rises with rounded corners, so the whole bar appears to grow upward. */
+  .rail { z-index: 52; transition: border-color .2s; }
+  .app-shell:has(.more-sheet.open) .rail { border-top-color: transparent; transition: none; }
+  .more-sheet {
+    --bar: calc(var(--bottom-nav-height) + var(--bottom-nav-inset));
+    display: block;
+    position: fixed;
+    z-index: 51;
+    inset: auto 0 0;
+    max-height: calc(100dvh - 48px);
+    overflow: auto;
+    padding: 14px max(14px, env(safe-area-inset-right)) calc(var(--bar) + 10px) max(14px, env(safe-area-inset-left));
+    background: var(--paper);
+    clip-path: inset(calc(100% - var(--bar)) 0 0 0 round 0 0 0 0);
+    pointer-events: none;
+    transition: clip-path .34s cubic-bezier(.4, 0, .2, 1);
+  }
+  .more-sheet.open {
+    clip-path: inset(0 0 0 0 round 23px 23px 0 0);
+    pointer-events: auto;
+    transition: clip-path .52s cubic-bezier(.32, .72, 0, 1);
+  }
+  .more-sheet-heading, .more-sheet li { opacity: 0; translate: 0 10px; transition: opacity .12s, translate .12s; }
+  .more-sheet.open .more-sheet-heading, .more-sheet.open li {
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity .3s var(--ease-out), translate .4s var(--ease-out);
+    transition-delay: calc(110ms + var(--i, -1) * 40ms + 40ms);
+  }
+  .more-sheet-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px; font-size: 16px; font-weight: 830; }
+  .more-sheet ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .more-sheet li button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; border-radius: 14px; text-align: left; color: var(--ink); }
+  .more-sheet li button:hover, .more-sheet li .selected { background: var(--lavender); }
+  .more-sheet li button > span:nth-child(2) { flex: 1; min-width: 0; }
+  .more-sheet li strong { display: block; font-size: 14px; font-weight: 800; }
+  .more-sheet li small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 600; }
   .main-content { padding: 17px 12px calc(var(--bottom-nav-height) + var(--bottom-nav-inset)); }
   .dashboard-bottom { grid-template-columns: minmax(0, 1fr); }
   .invoice-grid { grid-template-columns: minmax(0, 1fr); }
@@ -592,6 +633,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 .reminder-fab-inner li small { font-size: 11px; }
 .reminder-fab-inner > p { margin: 4px 0 10px; font-size: 12px; }
 .reminder-fab-inner .button { width: 100%; justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .more-sheet, .more-sheet.open, .more-backdrop, .more-sheet li, .more-sheet-heading { transition: opacity .15s linear !important; translate: none !important; } .more-sheet { opacity: 0; } .more-sheet.open { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .reminder-fab, .reminder-fab-body, .reminder-fab-inner, .reminder-fab-title, .reminder-fab-close { transition: none; } }
 .reminder-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid var(--line); }
 .reminder-row.needs-attention > .metric-icon { color: #70509c; background: #eee5fb; }
@@ -603,7 +645,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 .reminder-message { color: #52662c; font-size: 12px; }
 .reminder-message:empty { display: none; }
 @media (max-width: 810px) {
-  .rail nav button { font-size: 9px; }
+  .rail nav button { font-size: 10px; }
 }
 @media (max-width: 610px) {
   .reminder-list { padding: 15px; }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import Image from "next/image";
-import { ArrowRight, Bell, CalendarDays, ChevronRight, Columns3, FileText, FolderKanban, LayoutGrid, Wallet, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, Bell, CalendarDays, ChevronRight, Columns3, Ellipsis, FileText, FolderKanban, LayoutGrid, Wallet, Plus, ShieldCheck, UserRound, X } from "lucide-react";
 import { categories as projectCategories, formatDate, todayInMalaysia, type Project } from "@/lib/projects";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
 import { useProjects } from "@/lib/use-projects";
@@ -28,6 +28,8 @@ const pages = [
 ] as const;
 
 type Page = typeof pages[number]["name"];
+// Pages shown directly in the mobile bottom bar; the rest live in the "More" sheet.
+const mobilePrimary: readonly Page[] = ["Overview", "Projects", "To-do", "Expenses"];
 type Dialog = { mode: "new" | "account" } | { mode: "details" | "edit"; id: string };
 
 function Brand() {
@@ -71,6 +73,7 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [accountError, setAccountError] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
   const { session, authReady, live, projects, loading, loadError, retry, mutate } = useProjects(initialDay);
   const board = useTasks(cloudConfigured ? session?.user.id ?? null : "demo");
   const sorted = [...projects].sort((a, b) => {
@@ -91,7 +94,18 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
     return () => { clearInterval(interval); document.removeEventListener("visibilitychange", tick); };
   }, []);
 
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setMoreOpen(false); };
+    const mq = window.matchMedia("(min-width: 811px)");
+    const onResize = () => { if (mq.matches) setMoreOpen(false); };
+    document.addEventListener("keydown", onKey);
+    mq.addEventListener("change", onResize);
+    return () => { document.removeEventListener("keydown", onKey); mq.removeEventListener("change", onResize); };
+  }, [moreOpen]);
+
   function navigate(next: Page) {
+    setMoreOpen(false);
     setDialog(null);
     setPage(next);
     setSearch("");
@@ -142,13 +156,23 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
               title={name}
               aria-label={name}
               aria-current={page === name ? "page" : undefined}
-              className={page === name ? "selected" : ""}
+              className={[page === name ? "selected" : "", mobilePrimary.includes(name) ? "" : "mobile-secondary"].filter(Boolean).join(" ")}
               onClick={() => navigate(name)}
             >
               <Icon size={19} aria-hidden="true" />
               <span className="rail-label">{name}</span>
             </button>
           ))}
+          <button
+            className={`mobile-more ${moreOpen || !mobilePrimary.includes(page) ? "selected" : ""}`}
+            aria-label="More pages"
+            aria-expanded={moreOpen}
+            aria-controls="more-sheet"
+            onClick={() => setMoreOpen((open) => !open)}
+          >
+            <Ellipsis size={19} aria-hidden="true" />
+            <span className="rail-label">More</span>
+          </button>
         </nav>
         <button
           className={`rail-account ${dialog?.mode === "account" ? "selected" : ""}`}
@@ -163,6 +187,29 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
           <UserRound size={18} />
         </button>
       </aside>
+      {/* Always mounted so the sheet can morph both open and closed; `inert` keeps it out of focus/AT when closed. */}
+      <div className={`more-backdrop ${moreOpen ? "open" : ""}`} aria-hidden="true" onClick={() => setMoreOpen(false)} />
+      <div className={`more-sheet ${moreOpen ? "open" : ""}`} id="more-sheet" role="dialog" aria-modal="true" aria-label="More pages" inert={!moreOpen}>
+          <div className="more-sheet-heading"><strong>More</strong><button className="icon-button" aria-label="Close" onClick={() => setMoreOpen(false)}><X size={16} /></button></div>
+          <ul>
+            {pages.filter(({ name }) => !mobilePrimary.includes(name)).map(({ name, icon: Icon, description }, index) => (
+              <li key={name} style={{ "--i": index } as CSSProperties}>
+                <button className={page === name ? "selected" : ""} aria-current={page === name ? "page" : undefined} onClick={() => navigate(name)}>
+                  <span className="metric-icon"><Icon size={18} aria-hidden="true" /></span>
+                  <span><strong>{name}</strong><small>{description}</small></span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+            <li style={{ "--i": pages.length - mobilePrimary.length } as CSSProperties}>
+              <button onClick={() => { setMoreOpen(false); setAccountError(""); setDialog({ mode: "account" }); }}>
+                <span className="metric-icon"><UserRound size={18} aria-hidden="true" /></span>
+                <span><strong>Account</strong><small>Workspace settings and sign out.</small></span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            </li>
+          </ul>
+        </div>
       <main className="main-content">
         <div className="breadcrumb">Workspace <ChevronRight size={13} /> <span>{page}</span></div>
         <div className="page-heading">
