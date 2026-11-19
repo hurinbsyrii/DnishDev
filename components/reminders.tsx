@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
+import Image from "next/image";
 import { ArrowUpRight, Bell, BellRing, Check, Plus, Trash2, X } from "lucide-react";
 import { formatDate, type Project } from "@/lib/projects";
 import { emptyReminderData, parseReminderData, reminderSchedule, taskReminderItems, validSettings, type CustomReminder, type ReminderData, type ReminderItem, type ReminderSettings } from "@/lib/reminders";
@@ -188,9 +189,9 @@ export function Reminders({ owner, projects, tasks, taskError, active, today, on
     {(error || taskError || notificationError) && <p className="error-banner" role="alert">{error || taskError || notificationError}</p>}
     <p className="reminder-message" role="status">{message}</p>
     <section className="card reminder-list" aria-labelledby="reminder-list-heading">
-      <div className="card-heading"><div><h2 id="reminder-list-heading">Reminders <span className="period-tag">{due.length} need attention</span></h2><p className="muted">Project deadlines, to-do due dates and your own follow-ups.</p></div><div className="reminder-toolbar-actions"><button className="button quiet" aria-haspopup="dialog" onClick={() => setCustomizePreferences(true)}>Customize</button><button className="button primary" onClick={() => setEditor({ item: null })}><Plus size={16} />New reminder</button></div></div>
-      {!data.settings.enabled && <p className="empty">Reminders are paused. Enable them in your preferences to resume.</p>}
-      {data.settings.enabled && !scheduled.length && <p className="empty">No deadlines to remind you about. Create a reminder or add a project or to-do due date.</p>}
+      <div className="card-heading"><div className="mascot-heading"><div><h2 id="reminder-list-heading">Reminders <span className="period-tag">{due.length} need attention</span></h2><p className="muted">Project deadlines, to-do due dates and your own follow-ups.</p></div><Image className="mascot mascot-bell" src="/mascot/bell.webp" alt="" width={408} height={512} unoptimized /></div><div className="reminder-toolbar-actions"><button className="button quiet" aria-haspopup="dialog" onClick={() => setCustomizePreferences(true)}>Customize</button><button className="button primary" onClick={() => setEditor({ item: null })}><Plus size={16} />New reminder</button></div></div>
+      {!data.settings.enabled && <div className="empty"><Image className="mascot mascot-empty" src="/mascot/relaxing.webp" alt="" width={360} height={512} unoptimized /><p>Reminders are paused. Enable them in your preferences to resume.</p></div>}
+      {data.settings.enabled && !scheduled.length && <div className="empty"><Image className="mascot mascot-empty" src="/mascot/sitting.webp" alt="" width={512} height={468} unoptimized /><p>No deadlines to remind you about. Create a reminder or add a project or to-do due date.</p></div>}
       {scheduled.map(({ item, schedule }) => {
         const needsAttention = due.some((entry) => entry.item.id === item.id);
         const next = needsAttention ? schedule!.currentAt : schedule!.nextAt;
