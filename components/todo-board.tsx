@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { CalendarDays, CheckCheck, Circle, CircleCheck, Clock3, GripVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { CalendarDays, Circle, CircleCheck, Clock3, GripVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/projects";
 import { Modal } from "./ui";
 import { priorities, type Task, type TaskStatus as Status } from "@/lib/tasks";
@@ -90,7 +91,7 @@ export function TodoBoard({ board, today }: { board: TaskStore; today: string })
 
   return <section className="todo-page" aria-label="To-do board">
     <div className="card todo-toolbar">
-      <div className="todo-summary"><span className="metric-icon lavender"><CheckCheck size={19} /></span><div><strong>{done} of {tasks.length} tasks complete</strong><p className="muted">{board.cloud ? board.error ? "Cloud sync unavailable" : !board.ready ? "Connecting to Supabase" : board.live ? "Live sync across devices" : "Saved in Supabase · Checking for updates" : "Demo · Saved in this browser"} · Drag cards or use the status menu.</p></div></div>
+      <div className="todo-summary"><Image className="mascot mascot-toolbar" src="/mascot/clipboard.webp" alt="" width={467} height={512} unoptimized /><div><strong>{done} of {tasks.length} tasks complete</strong><p className="muted">{board.cloud ? board.error ? "Cloud sync unavailable" : !board.ready ? "Connecting to Supabase" : board.live ? "Live sync across devices" : "Saved in Supabase · Checking for updates" : "Demo · Saved in this browser"} · Drag cards or use the status menu.</p></div></div>
       <div className="table-controls">
         <label className="search todo-search"><Search size={15} /><input aria-label="Search tasks" placeholder="Search tasks…" value={query} onChange={(event) => { setQuery(event.target.value); setLimits(initialLimits); }} /></label>
         <select aria-label="Filter tasks by priority" value={priority} onChange={(event) => { setPriority(event.target.value); setLimits(initialLimits); }}><option value="">All priorities</option>{priorities.map((item) => <option key={item}>{item}</option>)}</select>
@@ -123,7 +124,7 @@ export function TodoBoard({ board, today }: { board: TaskStore; today: string })
               </div>}
               <div className="task-footer"><select aria-label={`Status for ${task.title}`} value={task.status} onChange={(event) => void move(task.id, event.target.value as Status, Date.now())}>{columns.map((column) => <option key={column.id} value={column.id}>{column.title}</option>)}</select><div className="task-actions"><button className="icon-button" aria-label={`Edit ${task.title}`} onClick={() => setEditor({ task, status: task.status })}><Pencil size={13} /></button><button className="icon-button" aria-label={`Delete ${task.title}`} onClick={() => setDeleting(task)}><Trash2 size={13} /></button></div></div>
             </article>)}
-            {!items.length && <div className="kanban-empty"><Icon size={24} /><strong>{query || priority ? "No matching tasks" : "A little space for what’s next"}</strong><p>{query || priority ? "Try another search or priority." : `Add a task${id === "todo" ? " to get started" : " or move one here"}.`}</p></div>}
+            {!items.length && <div className="kanban-empty">{query || priority ? <Icon size={24} /> : <Image className="mascot mascot-empty" src="/mascot/relaxing.webp" alt="" width={360} height={512} unoptimized />}<strong>{query || priority ? "No matching tasks" : "A little space for what’s next"}</strong><p>{query || priority ? "Try another search or priority." : `Add a task${id === "todo" ? " to get started" : " or move one here"}.`}</p></div>}
           </div>
           {items.length > pageSize && <div className="kanban-pagination">
             <p className="muted" role="status">Showing {Math.min(limits[id], items.length)} of {items.length} tasks</p>
