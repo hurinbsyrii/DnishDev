@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import Image from "next/image";
-import { ArrowRight, Bell, CalendarDays, ChevronRight, Columns3, FileText, FolderKanban, LayoutGrid, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, Bell, CalendarDays, ChevronRight, Columns3, FileText, FolderKanban, LayoutGrid, Wallet, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { categories as projectCategories, formatDate, todayInMalaysia, type Project } from "@/lib/projects";
 import { cloudConfigured, getSupabase } from "@/lib/supabase";
 import { useProjects } from "@/lib/use-projects";
@@ -15,12 +15,15 @@ import { Modal } from "./ui";
 import { TodoBoard } from "./todo-board";
 import { Reminders } from "./reminders";
 
+import { Expenses } from "./expenses";
+
 const pages = [
   { name: "Overview", icon: LayoutGrid, title: "Workspace overview", description: "Track projects, upcoming deadlines and what you’ve earned." },
   { name: "Projects", icon: FolderKanban, title: "Your projects", description: "Manage clients, payments and every milestone from won to published." },
   { name: "To-do", icon: Columns3, title: "Your to-do board", description: "Make a plan, focus on what’s next and keep work moving." },
   { name: "Calendar", icon: CalendarDays, title: "Project calendar", description: "See your project schedule by day and ISO week." },
   { name: "Reminders", icon: Bell, title: "Your reminders", description: "Choose when to get a nudge, how often it repeats and what to remember." },
+  { name: "Expenses", icon: Wallet, title: "Your expenses", description: "Track daily spending and see where your money goes each month." },
   { name: "Invoices", icon: FileText, title: "Create an invoice", description: "Fill in your company details, adjust the rates and download a PDF." },
 ] as const;
 
@@ -166,7 +169,7 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
           <div className="heading-copy" key={page}><p className="eyebrow"><span /> YOUR FREELANCE STUDIO</p><h1>{current.title}</h1><p className="page-description">{current.description}</p></div>
           <div className="heading-actions">
             <span className="date-pill"><CalendarDays size={16} /> {formatDate(today, { day: "numeric", month: "short", year: "numeric" })}</span>
-            {page !== "Invoices" && page !== "To-do" && page !== "Reminders" && <button className="button primary new-project" onClick={() => setDialog({ mode: "new" })}><Plus size={18} /> New project</button>}
+            {page !== "Expenses" && page !== "Invoices" && page !== "To-do" && page !== "Reminders" && <button className="button primary new-project" onClick={() => setDialog({ mode: "new" })}><Plus size={18} /> New project</button>}
           </div>
         </div>
         {loadError && <div className="error-banner" role="alert">{loadError}<button className="button quiet" onClick={retry}>Retry</button></div>}
@@ -177,6 +180,7 @@ export default function Workspace({ initialDay }: { initialDay: string }) {
             {page === "Projects" && renderList()}
             {page === "To-do" && <TodoBoard key={session?.user.id ?? "demo"} board={board} today={today} />}
             {page === "Calendar" && <Calendar projects={sorted} today={today} onProject={open} />}
+            {page === "Expenses" && <Expenses key={session?.user.id ?? "demo"} owner={session?.user.id ?? "demo"} today={today} />}
             {page === "Invoices" && <Invoice key={session?.user.id ?? "demo"} projects={sorted} today={today} owner={session?.user.id ?? "demo"} />}
           </div>}
         <footer className="workspace-footer"><span>DevDash Workspace</span><span>MYR <i /> Asia/Kuala_Lumpur</span></footer>

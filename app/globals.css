@@ -490,7 +490,8 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   }
   .rail nav {
     position: static;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(54px, 1fr));
+    overflow-x: auto;
     justify-items: stretch;
     gap: 4px;
   }
@@ -610,3 +611,36 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
   .reminder-row { flex-wrap: wrap; }
   .reminder-row-actions { margin-left: auto; }
 }
+
+.expenses-page { display: grid; gap: 18px; }
+.expense-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.expense-metrics .metric-card { min-height: 125px; }
+.expense-filters { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; padding: 20px; border-bottom: 1px solid var(--border, #eae7ef); }
+.expense-filters .field { flex: 1 1 140px; }
+.expense-day { padding: 12px 20px; }
+.expense-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; font-size: 13px; }
+.expense-day-heading h3 { font-size: 13px; }
+.expense-row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #efedf3; font-size: 13px; }
+.expense-description { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.expense-description p { margin-top: 5px; white-space: pre-wrap; }
+.expense-row > strong { white-space: nowrap; }
+.expense-breakdown { padding: 20px; }
+.expense-breakdown h2 { font-size: 16px; margin-bottom: 12px; }
+.expense-breakdown progress { width: 100%; height: 8px; accent-color: #8c73bd; }
+@media (max-width: 610px) {
+  .expense-metrics { grid-template-columns: 1fr; }
+  .expense-row { gap: 7px; flex-wrap: wrap; }
+  .expense-description { flex-basis: 60%; }
+}
+.expense-budget { padding: 20px; }
+.expense-budget > .expense-day-heading { flex-wrap: wrap; }
+.expense-budget h2 { margin: 8px 0; }
+.expense-budget progress { width: 100%; height: 10px; margin: 12px 0; accent-color: #8c73bd; }
+.expense-over-budget { color: #b23939; }
+.expense-over-budget progress { accent-color: #b23939; }
+.expense-breakdown table { min-width: 430px; margin-top: 14px; }
+.expense-ledger-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.expense-ledger-heading h2 { margin-bottom: 6px; }
+.expense-ledger-hint { margin-top: 14px; font-size: 12px; }
+.expense-breakdown tr.expense-today { background: #f2edf9; }
+.expense-today td:first-child { box-shadow: inset 3px 0 #8c73bd; }
