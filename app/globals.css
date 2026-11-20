@@ -141,8 +141,9 @@ h1 { font-size: clamp(31px, 3.6vw, 53px); line-height: 1.12; font-weight: 760; l
 .mascot-toolbar { width: auto; height: 52px; margin: -8px -2px -10px -4px; }
 .mascot-empty { width: auto; height: 74px; }
 .mascot-bell { width: auto; height: 66px; margin: -10px 0 -8px 4px; }
-.budget-actions { display: flex; align-items: flex-end; gap: 4px; }
-.mascot-budget { width: auto; height: 84px; margin: -18px 0 -6px; }
+.budget-actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+.budget-heading { display: flex; align-items: center; gap: 8px; }
+.mascot-budget { width: auto; height: 66px; }
 .chart-plot { display: grid; grid-template-rows: minmax(76px, 1fr) auto; min-width: 0; }
 .chart-plot svg { display: block; width: 100%; height: 100%; max-height: 94px; overflow: visible; }
 .chart-labels { position: relative; min-height: 15px; margin-top: -2px; font-size: 10px; color: #6b6574; font-weight: 700; }
@@ -674,7 +675,7 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 }
 
 .expenses-page { display: grid; gap: 18px; }
-.expense-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.expense-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .expense-metrics .metric-card { min-height: 125px; }
 .expense-filters { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; padding: 20px; border-bottom: 1px solid var(--border, #eae7ef); }
 .expense-filters .field { flex: 1 1 140px; }
@@ -690,8 +691,10 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 .expense-breakdown { padding: 20px; }
 .expense-breakdown h2 { font-size: 16px; margin-bottom: 12px; }
 .expense-breakdown progress { width: 100%; height: 8px; accent-color: #8c73bd; }
+@media (max-width: 1050px) {
+  .expense-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 610px) {
-  .expense-metrics { grid-template-columns: 1fr; }
   .expense-row { gap: 7px; flex-wrap: wrap; }
   .expense-description { flex-basis: 60%; }
 }
@@ -707,3 +710,13 @@ td small, .deadline-name small, .agenda-row small { display: block; color: var(-
 .expense-ledger-hint { margin-top: 14px; font-size: 12px; }
 .expense-breakdown tr.expense-today { background: #f2edf9; }
 .expense-today td:first-child { box-shadow: inset 3px 0 #8c73bd; }
+.budget-allocation-table td:first-child { overflow-wrap: anywhere; }
+.budget-allocation-table td:not(:first-child) { white-space: nowrap; }
+.budget-editor-categories { display: grid; gap: 8px; min-width: 0; }
+.budget-editor-category { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .75fr) minmax(0, .8fr) auto; align-items: end; gap: 8px; min-width: 0; border: 1px solid #e8e1f2; border-radius: 12px; padding: 10px; }
+.budget-editor-category legend { color: var(--ink); font-size: 12px; font-weight: 700; padding: 0 4px; }
+.budget-daily-calculation { grid-column: 1 / -1; }
+@media (max-width: 475px) {
+  .budget-editor-category { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .budget-editor-category .field:first-of-type { grid-column: 1 / -1; }
+}

@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { cloudConfigured, getSupabase } from "./supabase";
 import { expenseFromRow, expenseRow, parseExpenses, type Expense, type ExpenseRow } from "./expenses";
-import { readBudgets } from "./expense-budget";
+import { readBudgets, readDemoBudgetRows, type BudgetPlan, type BudgetRow } from "./expense-budget";
 
-type BudgetRow = { month: string; amount_cents: number; version: number };
 export function useExpenses(owner: string) {
   const [snapshot, setSnapshot] = useState<{ expenses: Expense[]; budgets: BudgetRow[] } | null>(null);
   const [error, setError] = useState("");
@@ -39,8 +38,16 @@ export function useExpenses(owner: string) {
         let next;
         if (client) {
           const [expenses, budgets] = await Promise.all([rows("expenses"), rows("expense_budgets")]);
-          next = { expenses: (expenses as ExpenseRow[]).map(expenseFromRow), budgets: (budgets as BudgetRow[]).map((row) => ({ ...row, amount_cents: Number(row.amount_cents) })) };
-        } else next = { expenses: parseExpenses(localStorage.getItem(storageKey)), budgets: Object.entries(readBudgets(localStorage.getItem(budgetKey))).map(([month, amount_cents]) => ({ month, amount_cents, version: 1 })) };
+          next = {
+            expenses: (expenses as ExpenseRow[]).map(expenseFromRow),
+            budgets: (budgets as BudgetRow[]).map((row) => ({
+              ...row,
+              amount_cents: Number(row.amount_cents),
+              spending_limit_cents: row.spending_limit_cents == null ? null : Number(row.spending_limit_cents),
+              allocations: row.allocations ?? [],
+            })),
+          };
+        } else next = { expenses: parseExpenses(localStorage.getItem(storageKey)), budgets: readDemoBudgetRows(localStorage.getItem(budgetKey)) };
         if (active && current === request && started === generation.current) { setSnapshot(next); setError(""); }
       } catch { if (active && current === request) setError(client ? "Couldn’t sync expenses. Check your connection and apply the synced expenses Supabase migration, then retry." : "Couldn’t load demo expenses. Check browser storage and retry."); }
     }
@@ -80,7 +87,11 @@ export function useExpenses(owner: string) {
     if (writing.current) throw new Error("Another expense or budget is saving. Try again in a moment.");
     writing.current = true; setSaving(true); generation.current++;
     try { await action(); setError(""); }
-    finally { generation.current++; writing.current = false; setSaving(false); await syncRef.current?.(); }
+    finally {
+      generation.current++;
+      try { await syncRef.current?.(); }
+      finally { writing.current = false; setSaving(false); }
+    }
   }
   async function mutate(previous: Expense | null, next: Expense | null) {
     await write(async () => {
@@ -102,20 +113,24 @@ export function useExpenses(owner: string) {
       }
     });
   }
-  async function saveBudget(month: string, cents: number, previous: BudgetRow | undefined) {
+  async function saveBudget(month: string, plan: BudgetPlan, previous: BudgetRow | undefined) {
     await write(async () => {
       const client = getSupabase();
       if (client) {
         const response = previous
-          ? await client.from("expense_budgets").update({ amount_cents: cents }).eq("user_id", owner).eq("month", month).eq("version", previous.version).select().maybeSingle()
-          : await client.from("expense_budgets").insert({ month, amount_cents: cents }).select().single();
-        if (response.error || !response.data) throw new Error("Couldn’t save the starting amount. It may have changed on another device. Reopen the latest budget and retry.");
+          ? await client.from("expense_budgets").update(plan).eq("user_id", owner).eq("month", month).eq("version", previous.version).select().maybeSingle()
+          : await client.from("expense_budgets").insert({ month, ...plan }).select().single();
+        if (response.error?.code === "PGRST204") throw new Error("Apply the Supabase monthly expense plans migration, then retry.");
+        if (response.error && response.error.code !== "23505") throw new Error("Couldn’t save the monthly budget. Check your connection and retry.");
+        if (!response.data) throw new Error("The budget changed on another device. Reopen the latest version and retry.");
       } else {
         if (cloudConfigured) throw new Error("Sign in to save budgets.");
         const update = () => {
-          const current = readBudgets(localStorage.getItem(budgetKey));
-          if (current[month] !== previous?.amount_cents) throw new Error("This starting amount changed in another tab. Reopen it and retry.");
-          localStorage.setItem(budgetKey, JSON.stringify({ ...current, [month]: cents }));
+          const raw = localStorage.getItem(budgetKey);
+          const current = readDemoBudgetRows(raw).find((row) => row.month === month);
+          if (current?.version !== previous?.version || current?.amount_cents !== previous?.amount_cents) throw new Error("This budget changed in another tab. Reopen it and retry.");
+          const all = raw ? JSON.parse(raw) : {};
+          localStorage.setItem(budgetKey, JSON.stringify({ ...all, [month]: { ...plan, version: (current?.version ?? 1) + 1 } }));
         };
         if (navigator.locks) await navigator.locks.request(budgetKey, update); else update();
       }
