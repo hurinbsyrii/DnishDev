@@ -1,36 +1,67 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarDays, Clock3, FolderKanban, Search, Wallet } from "lucide-react";
 import { balance, daysBetween, deadline, formatDate, money, profitFor, projectStage, type Project } from "@/lib/projects";
 import { RollingMoney, RollingNumber } from "./rolling-number";
 import { ProjectMark, Status } from "./ui";
 
+function compactMoney(cents: number) {
+  const value = cents / 100;
+  const abs = Math.abs(value);
+  const text = abs >= 1000 ? `${(abs / 1000).toFixed(abs >= 10000 ? 0 : 1).replace(/\.0$/, "")}k` : abs.toFixed(0);
+  return `${value < 0 ? "-" : ""}${text}`;
+}
+
 function ProfitChart({ projects, today }: { projects: Project[]; today: string }) {
   const gradient = useId();
+  const wrap = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(560);
+  const [active, setActive] = useState<number | null>(null);
+  useEffect(() => {
+    const node = wrap.current;
+    if (!node) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(240, entry.contentRect.width)));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const [year, month] = today.split("-").map(Number);
   const months = Array.from({ length: 6 }, (_, index) => new Date(Date.UTC(year, month - 6 + index, 1)).toISOString().slice(0, 7));
   const values = months.map((monthKey) => profitFor(projects, today, monthKey));
+  const height = 150, left = 12, right = 12, top = 26, bottom = 24;
   const high = Math.max(...values, 0);
   const low = Math.min(...values, 0);
   const spread = high - low || 100;
-  const points = values.map((value, index) => [28 + index * 100, 96 - (value - low) / spread * 72]);
-  const line = points.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x},${y}`).join(" ");
-  const zero = 96 - (0 - low) / spread * 72;
-  const last = points.at(-1)!;
-  return <div className="chart-plot">
-    <svg viewBox="0 0 556 116" preserveAspectRatio="none" role="img" aria-label={months.map((monthKey, index) => `${formatDate(`${monthKey}-01`, { month: "long" })} ${money(values[index])}`).join(", ")}>
-      <defs><linearGradient id={gradient} x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stopColor="#c9bdf1" stopOpacity=".62"/><stop offset="1" stopColor="#eee9fb" stopOpacity=".12"/></linearGradient></defs>
-      {[24, 48, 72, 96].map((y) => <line key={y} x1="10" x2="546" y1={y} y2={y} stroke="#edeaf1" strokeDasharray="4 4"/>)}
-      <g className="chart-series">
-        <path d={`${line} L528,${zero} L28,${zero} Z`} fill={`url(#${gradient})`}/>
-        <path d={line} stroke="#8f7cdb" strokeWidth="2.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" fill="none"/>
-        {points.map(([x, y], index) => <circle key={x} cx={x} cy={y} r={index === 5 ? 5.5 : 3.5} fill={index === 5 ? "#dff38d" : "#fff"} stroke="#8f7cdb" strokeWidth="2"><title>{formatDate(`${months[index]}-01`, { month: "long" })} · {money(values[index])}</title></circle>)}
-        <line x1={last[0]} x2={last[0]} y1={last[1] + 8} y2="107" stroke="#c8bce9" strokeDasharray="3 4" />
-      </g>
+  const innerW = width - left - right, innerH = height - top - bottom;
+  const x = (index: number) => left + innerW * (0.04 + 0.92 * index / 5);
+  const y = (value: number) => top + innerH - (value - low) / spread * innerH;
+  const points = values.map((value, index) => [x(index), y(value)] as const);
+  const line = points.map(([px, py], index) => `${index === 0 ? "M" : "L"}${px},${py}`).join(" ");
+  const zero = y(0);
+  const monthName = (index: number, style: "short" | "long") => formatDate(`${months[index]}-01`, { month: style });
+  const pick = (clientX: number) => {
+    const box = wrap.current?.getBoundingClientRect();
+    if (!box) return;
+    const rel = clientX - box.left;
+    setActive(points.reduce((best, [px], index) => Math.abs(px - rel) < Math.abs(points[best][0] - rel) ? index : best, 0));
+  };
+  const tip = active === null ? null : points[active];
+  return <div className="chart-plot" ref={wrap} onPointerMove={(event) => pick(event.clientX)} onPointerLeave={() => setActive(null)}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={months.map((_, index) => `${monthName(index, "long")} ${money(values[index])}`).join(", ")}>
+      <defs><linearGradient id={gradient} x2="0" y2="1"><stop stopColor="#c9bdf1" stopOpacity=".62"/><stop offset="1" stopColor="#eee9fb" stopOpacity=".12"/></linearGradient></defs>
+      {[0, 1, 2, 3].map((step) => <line key={step} x1={left} x2={width - right} y1={top + innerH * step / 3} y2={top + innerH * step / 3} stroke="#edeaf1" strokeDasharray="4 4"/>)}
+      <line x1={left} x2={width - right} y1={zero} y2={zero} stroke="#d9d3e6"/>
+      <path d={`${line} L${points[5][0]},${zero} L${points[0][0]},${zero} Z`} fill={`url(#${gradient})`}/>
+      <path d={line} stroke="#8f7cdb" strokeWidth="2.2" strokeLinejoin="round" fill="none"/>
+      {active !== null && <line x1={points[active][0]} x2={points[active][0]} y1={top - 6} y2={height - bottom} stroke="#c8bce9" strokeDasharray="3 4"/>}
+      {points.map(([px, py], index) => <g key={months[index]}>
+        <circle cx={px} cy={py} r={index === 5 || index === active ? 5.5 : 3.5} fill={index === 5 ? "#dff38d" : "#fff"} stroke="#8f7cdb" strokeWidth="2"/>
+        <text x={px} y={py - 11} textAnchor="middle" fontSize="10" fontWeight="700" fill={values[index] < 0 ? "#c0504d" : "#4b4458"}>{compactMoney(values[index])}</text>
+        <text x={px} y={height - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill="#6b6574">{monthName(index, "short")}</text>
+      </g>)}
     </svg>
-    <div className="chart-labels">{months.map((monthKey, index) => <span key={monthKey} style={{ left: `${points[index][0] / 556 * 100}%` }}>{formatDate(`${monthKey}-01`, { month: "short" })}</span>)}</div>
+    {tip && active !== null && <div className="chart-tip" style={{ left: Math.min(Math.max(tip[0], 60), width - 60), top: Math.max(tip[1] - 54, 0) }}><small>{monthName(active, "long")} {months[active].slice(0, 4)}</small><strong>{money(values[active])}</strong></div>}
   </div>;
 }
 
