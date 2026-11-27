@@ -23,7 +23,7 @@ const pages = [
   { name: "To-do", icon: Columns3, title: "Your to-do board", description: "Make a plan, focus on what’s next and keep work moving." },
   { name: "Calendar", icon: CalendarDays, title: "Project calendar", description: "See your project schedule by day and ISO week." },
   { name: "Reminders", icon: Bell, title: "Your reminders", description: "Choose when to get a nudge, how often it repeats and what to remember." },
-  { name: "Expenses", icon: Wallet, title: "Your expenses", description: "Track daily spending and see where your money goes each month." },
+  { name: "Expenses", icon: Wallet, title: "Your expenses", description: "Your balances, emergency money and what’s left to spend this month." },
   { name: "Invoices", icon: FileText, title: "Create an invoice", description: "Fill in your company details, adjust the rates and download a PDF." },
 ] as const;
 
